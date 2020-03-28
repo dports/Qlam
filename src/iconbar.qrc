@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/iconbar">
+        <file alias="scan22">resources/iconbar/22/scan.png</file>
+        <file alias="update22">resources/iconbar/22/update.png</file>
+        <file alias="scan32">resources/iconbar/32/scan.png</file>
+        <file alias="update32">resources/iconbar/32/update.png</file>
+        <file alias="scan64">resources/iconbar/64/scan.png</file>
+    </qresource>
+</RCC>

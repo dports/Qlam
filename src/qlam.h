@@ -1,0 +1,7 @@
+#ifndef QLAM_H
+#define QLAM_H
+
+#define QLAM_TITLE_LABEL_FONT_POINT_SIZE_RATIO 1.5
+#define QLAM_TITLE_LABEL_FONT_BOLD 1
+
+#endif // QLAM_H

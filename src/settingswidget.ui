@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SettingsWidget</class>
+ <widget class="QWidget" name="SettingsWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>514</width>
+    <height>354</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,2">
+   <item>
+    <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0">
+     <item row="0" column="0">
+      <widget class="QLabel" name="databasePathLabel">
+       <property name="text">
+        <string>Database path</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLineEdit" name="databasePath"/>
+       </item>
+       <item>
+        <widget class="QToolButton" name="chooseDatabasePathButton">
+         <property name="text">
+          <string>...</string>
+         </property>
+         <property name="icon">
+          <iconset theme="folder">
+           <normaloff/>
+          </iconset>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="databasesLabel">
+       <property name="text">
+        <string>Databases</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QListWidget" name="databases">
+       <property name="selectionMode">
+        <enum>QAbstractItemView::NoSelection</enum>
+       </property>
+       <property name="modelColumn">
+        <number>0</number>
+       </property>
+       <property name="uniformItemSizes">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="updateServerLabel">
+       <property name="text">
+        <string>Update server</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="0">
+        <widget class="QRadioButton" name="officialMirrorButton">
+         <property name="text">
+          <string>Official mirror</string>
+         </property>
+         <attribute name="buttonGroup">
+          <string notr="true">updateServerType</string>
+         </attribute>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QComboBox" name="mirrorCombo"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QRadioButton" name="customServerButton">
+         <property name="text">
+          <string>Custom server</string>
+         </property>
+         <attribute name="buttonGroup">
+          <string notr="true">updateServerType</string>
+         </attribute>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="customServer"/>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>164</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>chooseDatabasePathButton</sender>
+   <signal>clicked()</signal>
+   <receiver>SettingsWidget</receiver>
+   <slot>chooseDatabasePath()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>490</x>
+     <y>22</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>482</x>
+     <y>264</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>databasePath</sender>
+   <signal>editingFinished()</signal>
+   <receiver>SettingsWidget</receiver>
+   <slot>slotDatabasePathChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>339</x>
+     <y>27</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>290</x>
+     <y>263</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>customServerButton</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>customServer</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>206</x>
+     <y>168</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>502</x>
+     <y>169</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>officialMirrorButton</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>mirrorCombo</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>206</x>
+     <y>139</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>482</x>
+     <y>140</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>mirrorCombo</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>SettingsWidget</receiver>
+   <slot>slotMirrorChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>398</x>
+     <y>131</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>412</x>
+     <y>349</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>customServer</sender>
+   <signal>textEdited(QString)</signal>
+   <receiver>SettingsWidget</receiver>
+   <slot>slotCustomServerChanged()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>431</x>
+     <y>162</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>323</x>
+     <y>351</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>chooseDatabasePath()</slot>
+  <slot>slotDatabasePathChanged()</slot>
+  <slot>slotServerTypeChanged()</slot>
+  <slot>slotMirrorChanged()</slot>
+  <slot>slotCustomServerChanged()</slot>
+ </slots>
+ <buttongroups>
+  <buttongroup name="updateServerType"/>
+ </buttongroups>
+</ui>
