@@ -42,11 +42,11 @@ MainWindow::MainWindow(QWidget *parent) :
 	readSettings();
 
 	connect(m_ui->iconBar, &QListWidget::currentRowChanged, m_ui->stackWidget, &QStackedWidget::setCurrentIndex);
-	connect(m_scanWidget, SIGNAL(saveProfileButtonClicked()), this, SLOT(slotSaveProfileButtonClicked()));
-	connect(m_scanWidget, SIGNAL(scanPathsChanged()), this, SLOT(slotScanPathsChanged()));
-	connect(m_scanWidget, SIGNAL(scanStarted()), this, SLOT(slotDisableBackButton()));
-	connect(m_scanWidget, SIGNAL(scanFinished()), this, SLOT(slotEnableBackButton()));
-	connect(Application::instance(), SIGNAL(scanProfileAdded(int)), this, SLOT(slotScanProfileAdded(int)));
+	connect(m_scanWidget, &ScanWidget::saveProfileButtonClicked, this, &MainWindow::slotSaveProfileButtonClicked);
+	connect(m_scanWidget, &ScanWidget::scanPathsChanged, this, &MainWindow::slotScanPathsChanged);
+	connect(m_scanWidget, &ScanWidget::scanStarted, this, &MainWindow::slotDisableBackButton);
+	connect(m_scanWidget, &ScanWidget::scanFinished, this, &MainWindow::slotEnableBackButton);
+	connect(Application::instance(), qOverload<int>(&Application::scanProfileAdded), this,  &MainWindow::slotScanProfileAdded);
 }
 
 
@@ -101,7 +101,7 @@ void MainWindow::addBuiltInWidgets() {
 	m_scanStack->addWidget(m_scanWidget);
 	m_scanStack->setCurrentIndex(0);
 
-	connect(m_scanProfileChooser, SIGNAL(profileChosen(int)), this, SLOT(slotScanProfileChosen(int)));
+	connect(m_scanProfileChooser, &ScanProfileChooser::profileChosen, this, &MainWindow::slotScanProfileChosen);
 
 	auto * scanLayout = new QVBoxLayout;
 	m_scanBackButton = new QToolButton(this);

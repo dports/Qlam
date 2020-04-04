@@ -17,6 +17,9 @@ SettingsDialogue::SettingsDialogue(Settings * settings, QWidget * parent)
 	fallbackIcon.addFile(":/settingsdialogue/icons/save32", QSize(32, 32));
 	m_saveButton = new QPushButton(QIcon::fromTheme("document-save", fallbackIcon), tr("Save"), this);
 	m_ui->buttonBox->addButton(m_saveButton, QDialogButtonBox::ApplyRole);
+
+	connect(m_ui->buttonBox, &QDialogButtonBox::accepted, this, &SettingsDialogue::accept);
+	connect(m_ui->buttonBox, &QDialogButtonBox::rejected, this, &SettingsDialogue::reject);
 	connect(m_saveButton, &QPushButton::clicked, this, &SettingsDialogue::saveSettings);
 }
 

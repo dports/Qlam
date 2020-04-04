@@ -7,7 +7,7 @@
 namespace Qlam {
 	class DatabaseInfo {
 		public:
-			explicit DatabaseInfo(const QString & = {});
+			explicit DatabaseInfo(QString = {});
 
 			bool isValid();
 

@@ -61,7 +61,7 @@ void Updater::run() {
 	 */
 	QByteArray dnsTxtRecord;
 	QEventLoop loop;
-	connect(this, SIGNAL(abortRequested()), &loop, SLOT(quit()));
+	connect(this, &Updater::abortRequested, &loop, &QEventLoop::quit);
 
 	{
 		/* block for max 5s while the lookup is in progress. */
@@ -69,8 +69,8 @@ void Updater::run() {
 		QTimer t;
 		t.setSingleShot(true);
 		t.setInterval(5000);
-		connect(&t, SIGNAL(timeout()), &loop, SLOT(quit()));
-		connect(&lookup, SIGNAL(finished()), &loop, SLOT(quit()));
+		connect(&t, &QTimer::timeout, &loop, &QEventLoop::quit);
+		connect(&lookup, &QDnsLookup::finished, &loop, &QEventLoop::quit);
 		lookup.lookup();
 		t.start();
 		loop.exec();
@@ -181,11 +181,11 @@ void Updater::run() {
 qDebug() << "update server:" << u;
 		u.setPath("/main.cvd");
 qDebug() << "update URL:" << u;
-		VirusDatabaseDownloader d(u, &f);
-		connect(&d, SIGNAL(downloadProgress(int)), this, SIGNAL(updateProgress(int)));
-		connect(&d, SIGNAL(finished()), &loop, SLOT(quit()));
+		VirusDatabaseDownloader downloader(u, &f);
+		connect(&downloader, qOverload<int>(&VirusDatabaseDownloader::downloadProgress), this, &Updater::updateProgress);
+		connect(&downloader, &VirusDatabaseDownloader::finished, &loop, &QEventLoop::quit);
 
-		if(!d.download()) {
+		if(!downloader.download()) {
 			Q_EMIT updateFailed(tr("Failed to download main database."));
 			Q_EMIT updateComplete();
 			return;
@@ -198,7 +198,7 @@ qDebug() << "update URL:" << u;
 			return;
 		}
 
-		if(VirusDatabaseDownloader::NoError != d.error()) {
+		if(VirusDatabaseDownloader::NoError != downloader.error()) {
 			Q_EMIT updateFailed(tr("Failed to download main database."));
 			Q_EMIT updateComplete();
 			return;
@@ -218,11 +218,11 @@ qDebug() << "update URL:" << u;
 		/* download the updated database */
 		QUrl u(s->updateServer());
 		u.setPath("/daily.cvd");
-		VirusDatabaseDownloader d(u, &f);
-		connect(&d, SIGNAL(downloadProgress(int)), this, SIGNAL(updateProgress(int)));
-		connect(&d, SIGNAL(finished()), &loop, SLOT(quit()));
+		VirusDatabaseDownloader downloader(u, &f);
+		connect(&downloader, qOverload<int>(&VirusDatabaseDownloader::downloadProgress), this, &Updater::updateProgress);
+		connect(&downloader, &VirusDatabaseDownloader::finished, &loop, &QEventLoop::quit);
 
-		if(!d.download()) {
+		if(!downloader.download()) {
 			Q_EMIT updateFailed(tr("Failed to download daily database."));
 			Q_EMIT updateComplete();
 			return;
@@ -235,7 +235,7 @@ qDebug() << "update URL:" << u;
 			return;
 		}
 
-		if(VirusDatabaseDownloader::NoError != d.error()) {
+		if(VirusDatabaseDownloader::NoError != downloader.error()) {
 			Q_EMIT updateFailed(tr("Failed to download daily database."));
 			Q_EMIT updateComplete();
 			return;
@@ -245,21 +245,21 @@ qDebug() << "update URL:" << u;
 	if(doBytecodeUpdate) {
 		Q_EMIT updatingBytecodeDatabase(latestBytecodeVersion);
 
-		QFile f(qlamApp->settings()->databasePath() + "/bytecode.cvd");
+		QFile file(qlamApp->settings()->databasePath() + "/bytecode.cvd");
 
-		if(!f.open(QIODevice::WriteOnly)) {
+		if(!file.open(QIODevice::WriteOnly)) {
 			Q_EMIT updateFailed(tr("Failed to open bytecode database file for writing."));
 			return;
 		}
 
 		/* download the updated database */
-		QUrl u(s->updateServer());
-		u.setPath("/bytecode.cvd");
-		VirusDatabaseDownloader d(u, &f);
-		connect(&d, SIGNAL(downloadProgress(int)), this, SIGNAL(updateProgress(int)));
-		connect(&d, SIGNAL(finished()), &loop, SLOT(quit()));
+		QUrl url(s->updateServer());
+		url.setPath("/bytecode.cvd");
+		VirusDatabaseDownloader downloader(url, &file);
+		connect(&downloader, qOverload<int>(&VirusDatabaseDownloader::downloadProgress), this, &Updater::updateProgress);
+		connect(&downloader, &VirusDatabaseDownloader::finished, &loop, &QEventLoop::quit);
 
-		if(!d.download()) {
+		if(!downloader.download()) {
 			Q_EMIT updateFailed(tr("Failed to download bytecode database."));
 			Q_EMIT updateComplete();
 			return;
@@ -272,7 +272,7 @@ qDebug() << "update URL:" << u;
 			return;
 		}
 
-		if(VirusDatabaseDownloader::NoError != d.error()) {
+		if(VirusDatabaseDownloader::NoError != downloader.error()) {
 			Q_EMIT updateFailed(tr("Failed to download bytecode database."));
 			Q_EMIT updateComplete();
 			return;

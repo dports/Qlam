@@ -88,7 +88,7 @@ Scanner::Scanner( const QString & scanPath, QObject * parent )
   m_scanEngine(nullptr),
   m_abortFlag(false) {
 	setScanPath(scanPath);
-	connect(Application::instance(), SIGNAL(aboutToQuit()), this, SLOT(abort()));
+	connect(Application::instance(), &Application::aboutToQuit, this, &Scanner::abort);
 }
 
 Scanner::Scanner( const QStringList & scanPaths, QObject * parent )
@@ -103,7 +103,7 @@ Scanner::Scanner( const QStringList & scanPaths, QObject * parent )
   m_scanEngine(nullptr),
   m_abortFlag(false) {
 	setScanPaths(scanPaths);
-	connect(Application::instance(), SIGNAL(aboutToQuit()), this, SLOT(abort()));
+    connect(Application::instance(), &Application::aboutToQuit, this, &Scanner::abort);
 }
 
 Scanner::~Scanner() {

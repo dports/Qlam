@@ -13,8 +13,8 @@
 
 using namespace Qlam;
 
-DatabaseInfo::DatabaseInfo( const QString & path )
-: m_path(path),
+DatabaseInfo::DatabaseInfo(QString path)
+: m_path(std::move(path)),
   m_buildTime(),
   m_version(),
   m_signatures(-1),

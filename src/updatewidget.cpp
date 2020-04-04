@@ -32,6 +32,8 @@ UpdateWidget::UpdateWidget(QWidget *parent)
 	m_ui->databases->setHeaderLabels(QStringList() << tr("Database") << QString());
 	m_ui->updateProgress->setVisible(false);
 
+	connect(m_ui->updateNowButton, &QPushButton::click, this, &UpdateWidget::doUpdate);
+
 	listDatabases();
 
 	connect(qlamApp->settings(), &Settings::databasePathChanged, this, &UpdateWidget::listDatabases);

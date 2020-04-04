@@ -23,6 +23,13 @@ SettingsWidget::SettingsWidget( QWidget * parent )
   m_ui(std::make_unique<Ui::SettingsWidget>()),
   m_settings(nullptr) {
 	m_ui->setupUi(this);
+
+	connect(m_ui->chooseDatabasePathButton, &QToolButton::clicked, this, &SettingsWidget::chooseDatabasePath);
+	connect(m_ui->customServerButton, &QToolButton::toggled, m_ui->customServer, &QLineEdit::setEnabled);
+	connect(m_ui->officialMirrorButton, &QToolButton::toggled, m_ui->mirrorCombo, &QComboBox::setEnabled);
+	connect(m_ui->mirrorCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &SettingsWidget::slotMirrorChanged);
+	connect(m_ui->databasePath, &QLineEdit::editingFinished, this, &SettingsWidget::slotDatabasePathChanged);
+	connect(m_ui->customServer, &QLineEdit::textEdited, this, &SettingsWidget::slotCustomServerChanged);
 	setupMirrors();
 }
 

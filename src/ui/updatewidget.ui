@@ -138,25 +138,6 @@
   </layout>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>updateNowButton</sender>
-   <signal>clicked()</signal>
-   <receiver>UpdateWidget</receiver>
-   <slot>doUpdate()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>349</x>
-     <y>277</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>199</x>
-     <y>149</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
- <slots>
-  <slot>doUpdate()</slot>
- </slots>
+ <connections/>
+ <slots/>
 </ui>

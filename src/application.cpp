@@ -71,7 +71,7 @@ Application::Application(int & argc, char ** argv)
 	}
 
 	m_scanProfiles.append(new ScanProfile(tr("Custom scan")));
-	connect(this, SIGNAL(aboutToQuit()), this, SLOT(writeScanProfiles()));
+	connect(this, &Application::aboutToQuit, this, &Application::writeScanProfiles);
 }
 
 Application::~Application() {
@@ -121,7 +121,7 @@ qDebug() << "engine lock requested, stopping dispose timer";
 			path = QDir::toNativeSeparators(settings()->databasePath()).toLocal8Bit();
 		}
 
-		int ret = cl_load(path.data(), m_scanEngine, &sigs, CL_DB_STDOPT);
+		int ret = cl_load(path.data(), m_scanEngine, &sigs, CL_DB_STDOPT); // NOLINT(hicpp-signed-bitwise)
 
 		if(CL_SUCCESS != ret) {
 			qDebug() << "failed to load databases:" << cl_strerror(ret);
