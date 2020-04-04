@@ -3,7 +3,6 @@
 #include <QtGlobal>
 
 #include <QtNetwork/QDnsLookup>
-#include <QtNetwork/QDnsTextRecord>
 #include <QtCore/QList>
 #include <QtCore/QDebug>
 #include <QtCore/QByteArray>
@@ -29,14 +28,15 @@ void Updater::run() {
 	QString dbPath = s->databasePath();
 
 	if(dbPath.isEmpty()) {
-		Q_EMIT(updateFailed(tr("You are using the system ClamAV virus databases which are updated automatically.")));
+		Q_EMIT updateFailed(tr("You are using the system ClamAV virus databases which are updated automatically."));
 		return;
 	}
 
 	QList<DatabaseInfo> dbs(Application::instance()->databases());
-	int currentMainVersion = -1, currentDailyVersion = -1, currentBytecodeVersion = -1;
-	int latestMainVersion = -1, latestDailyVersion = -1, latestBytecodeVersion = -1;
-	QString latestClamAvVersion;
+	int currentBytecodeVersion = -1;
+    int currentDailyVersion = -1;
+    int currentMainVersion = -1;
+    QString latestClamAvVersion;
 
 	for(const auto & db: dbs) {
 
@@ -76,13 +76,13 @@ void Updater::run() {
 		loop.exec();
 
 		if(m_abort) {
-			Q_EMIT(aborted());
+			Q_EMIT aborted();
 			return;
 		}
 
 		if(!lookup.isFinished()) {
 			qDebug() << "DNS request timed out";
-			Q_EMIT(checkFailed(tr("Failed to fetch latest version numbers for databases.")));
+			Q_EMIT checkFailed(tr("Failed to fetch latest version numbers for databases."));
 			return;
 		}
 
@@ -90,12 +90,12 @@ void Updater::run() {
 
 		if(1 > records.count()) {
 			qDebug() << "DNS request returned no records";
-			Q_EMIT(checkFailed(tr("Failed to fetch latest version numbers for databases.")));
+			Q_EMIT checkFailed(tr("Failed to fetch latest version numbers for databases."));
 			return;
 		}
 		else if(1 < records.count()) {
 			qDebug() << "DNS request returned too many records";
-			Q_EMIT(checkFailed(tr("Failed to fetch latest version numbers for databases.")));
+			Q_EMIT checkFailed(tr("Failed to fetch latest version numbers for databases."));
 			return;
 		}
 
@@ -103,12 +103,12 @@ void Updater::run() {
 
 		if(1 > values.count()) {
 			qDebug() << "DNS request returned no values";
-			Q_EMIT(checkFailed(tr("Failed to fetch latest version numbers for databases.")));
+			Q_EMIT checkFailed(tr("Failed to fetch latest version numbers for databases."));
 			return;
 		}
 		else if(1 < values.count()) {
 			qDebug() << "DNS request returned too many values";
-			Q_EMIT(checkFailed(tr("Failed to fetch latest version numbers for databases.")));
+			Q_EMIT checkFailed(tr("Failed to fetch latest version numbers for databases."));
 			return;
 		}
 
@@ -124,28 +124,28 @@ void Updater::run() {
 	latestClamAvVersion = numbers.at(0);
 
 	if(latestClamAvVersion.isEmpty()) {
-		Q_EMIT(checkFailed("Invalid version number for ClamAV software."));
+		Q_EMIT checkFailed("Invalid version number for ClamAV software.");
 		return;
 	}
 
-	latestMainVersion = numbers.at(1).toInt(&ok);
+	int latestMainVersion = numbers.at(1).toInt(&ok);
 
 	if(!ok) {
-		Q_EMIT(checkFailed("Invalid version number for the main database."));
+		Q_EMIT checkFailed("Invalid version number for the main database.");
 		return;
 	}
 
-	latestDailyVersion = numbers.at(2).toInt(&ok);
+	int latestDailyVersion = numbers.at(2).toInt(&ok);
 
 	if(!ok) {
-		Q_EMIT(checkFailed("Invalid version number for the daily database."));
+		Q_EMIT checkFailed("Invalid version number for the daily database.");
 		return;
 	}
 
-	latestBytecodeVersion = numbers.at(7).toInt(&ok);
+	int latestBytecodeVersion = numbers.at(7).toInt(&ok);
 
 	if(!ok) {
-		Q_EMIT(checkFailed("Invalid version number for the bytecode database."));
+		Q_EMIT checkFailed("Invalid version number for the bytecode database.");
 		return;
 	}
 
@@ -159,20 +159,20 @@ void Updater::run() {
 	bool doBytecodeUpdate = latestBytecodeVersion > currentBytecodeVersion;
 
 	if(doMainUpdate || doDailyUpdate || doBytecodeUpdate) {
-		Q_EMIT(updatesFound());
+		Q_EMIT updatesFound();
 	}
 	else {
-		Q_EMIT(upToDate());
+		Q_EMIT upToDate();
 		return;
 	}
 
 	if(doMainUpdate) {
-		Q_EMIT(updatingMainDatabase(latestMainVersion));
+		Q_EMIT updatingMainDatabase(latestMainVersion);
 
 		QFile f(qlamApp->settings()->databasePath() + "/main.cvd");
 
 		if(!f.open(QIODevice::WriteOnly)) {
-			Q_EMIT(updateFailed(tr("Failed to open main database file for writing.")));
+			Q_EMIT updateFailed(tr("Failed to open main database file for writing."));
 			return;
 		}
 
@@ -186,32 +186,32 @@ qDebug() << "update URL:" << u;
 		connect(&d, SIGNAL(finished()), &loop, SLOT(quit()));
 
 		if(!d.download()) {
-			Q_EMIT(updateFailed(tr("Failed to download main database.")));
-			Q_EMIT(updateComplete());
+			Q_EMIT updateFailed(tr("Failed to download main database."));
+			Q_EMIT updateComplete();
 			return;
 		}
 
 		loop.exec();
 
 		if(m_abort) {
-			Q_EMIT(aborted());
+			Q_EMIT aborted();
 			return;
 		}
 
 		if(VirusDatabaseDownloader::NoError != d.error()) {
-			Q_EMIT(updateFailed(tr("Failed to download main database.")));
-			Q_EMIT(updateComplete());
+			Q_EMIT updateFailed(tr("Failed to download main database."));
+			Q_EMIT updateComplete();
 			return;
 		}
 	}
 
 	if(doDailyUpdate) {
-		Q_EMIT(updatingDailyDatabase(latestDailyVersion));
+		Q_EMIT updatingDailyDatabase(latestDailyVersion);
 
 		QFile f(qlamApp->settings()->databasePath() + "/daily.cvd");
 
 		if(!f.open(QIODevice::WriteOnly)) {
-			Q_EMIT(updateFailed(tr("Failed to open daily database file for writing.")));
+			Q_EMIT updateFailed(tr("Failed to open daily database file for writing."));
 			return;
 		}
 
@@ -223,32 +223,32 @@ qDebug() << "update URL:" << u;
 		connect(&d, SIGNAL(finished()), &loop, SLOT(quit()));
 
 		if(!d.download()) {
-			Q_EMIT(updateFailed(tr("Failed to download daily database.")));
-			Q_EMIT(updateComplete());
+			Q_EMIT updateFailed(tr("Failed to download daily database."));
+			Q_EMIT updateComplete();
 			return;
 		}
 
 		loop.exec();
 
 		if(m_abort) {
-			Q_EMIT(aborted());
+			Q_EMIT aborted();
 			return;
 		}
 
 		if(VirusDatabaseDownloader::NoError != d.error()) {
-			Q_EMIT(updateFailed(tr("Failed to download daily database.")));
-			Q_EMIT(updateComplete());
+			Q_EMIT updateFailed(tr("Failed to download daily database."));
+			Q_EMIT updateComplete();
 			return;
 		}
 	}
 
 	if(doBytecodeUpdate) {
-		Q_EMIT(updatingBytecodeDatabase(latestBytecodeVersion));
+		Q_EMIT updatingBytecodeDatabase(latestBytecodeVersion);
 
 		QFile f(qlamApp->settings()->databasePath() + "/bytecode.cvd");
 
 		if(!f.open(QIODevice::WriteOnly)) {
-			Q_EMIT(updateFailed(tr("Failed to open bytecode database file for writing.")));
+			Q_EMIT updateFailed(tr("Failed to open bytecode database file for writing."));
 			return;
 		}
 
@@ -260,30 +260,30 @@ qDebug() << "update URL:" << u;
 		connect(&d, SIGNAL(finished()), &loop, SLOT(quit()));
 
 		if(!d.download()) {
-			Q_EMIT(updateFailed(tr("Failed to download bytecode database.")));
-			Q_EMIT(updateComplete());
+			Q_EMIT updateFailed(tr("Failed to download bytecode database."));
+			Q_EMIT updateComplete();
 			return;
 		}
 
 		loop.exec();
 
 		if(m_abort) {
-			Q_EMIT(aborted());
+			Q_EMIT aborted();
 			return;
 		}
 
 		if(VirusDatabaseDownloader::NoError != d.error()) {
-			Q_EMIT(updateFailed(tr("Failed to download bytecode database.")));
-			Q_EMIT(updateComplete());
+			Q_EMIT updateFailed(tr("Failed to download bytecode database."));
+			Q_EMIT updateComplete();
 			return;
 		}
 	}
 
-	Q_EMIT(updateSucceeded());
-	Q_EMIT(updateComplete());
+	Q_EMIT updateSucceeded();
+	Q_EMIT updateComplete();
 }
 
 
 void Updater::emitUpdateProgress( qint64 received, qint64 total) {
-	Q_EMIT(updateProgress(int(100.0 * received / total)));
+	Q_EMIT updateProgress(int(100.0 * received / total));
 }

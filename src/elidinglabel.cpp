@@ -50,7 +50,7 @@ void ElidingLabel::resizeEvent( QResizeEvent * ev ) {
 }
 
 
-void ElidingLabel::doElide( void ) {
+void ElidingLabel::doElide() {
 	/* TODO do we need to accommodate frame thickness? */
 	QLabel::setText(fontMetrics().elidedText(m_text, m_elideMode, width() - margin() - 1));
 }

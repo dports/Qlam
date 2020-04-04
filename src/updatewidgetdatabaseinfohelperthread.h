@@ -8,24 +8,19 @@
 namespace Qlam {
 	class UpdateWidgetDatabaseInfoHelperThread
 	: public QThread {
-
-			Q_OBJECT
+        Q_OBJECT
 
 		public:
 			explicit UpdateWidgetDatabaseInfoHelperThread( QObject * parent = nullptr );
 #if defined(QT_DEBUG)
-			virtual ~UpdateWidgetDatabaseInfoHelperThread( void );
+			~UpdateWidgetDatabaseInfoHelperThread() override;
 #endif
 
 		protected:
-			virtual void run( void );
+			void run() override;
 
-		signals:
+		Q_SIGNALS:
 			void databaseInfoRead( const DatabaseInfo & db );
-
-		public slots:
-
-		private:
 	};
 }
 

@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/settingsdialogue/icons">
+        <file alias="save22">settingsdialogue/icons/22/save.png</file>
+        <file alias="save32">settingsdialogue/icons/32/save.png</file>
+    </qresource>
+</RCC>

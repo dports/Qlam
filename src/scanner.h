@@ -16,6 +16,8 @@ struct cl_engine;
 
 namespace Qlam {
 
+    enum class ScannerHeuristicMatch;
+
 	class Scanner
 	: public QThread {
 
@@ -24,22 +26,22 @@ namespace Qlam {
 		public:
 			typedef QList<InfectedFile> InfectionList;
 
-			Scanner( const QString & scanPath = QString(), QObject * parent = nullptr );
-			Scanner( const QStringList & scanPaths, QObject * parent = nullptr );
-			virtual ~Scanner( void );
+			explicit Scanner( const QString & = QString(), QObject * = nullptr );
+			explicit Scanner( const QStringList &, QObject * = nullptr );
+			~Scanner() override;
 
-			const QStringList & scanPaths( void ) const {
+			const QStringList & scanPaths() const {
 				return m_scanPaths;
 			}
 
-			const QString & scanPath( int i = 0 ) const {
+			const QString & scanPath(int idx = 0) const {
 				static QString empty;
 
-				if(0 > i || m_scanPaths.count() <= i) {
+				if(0 > idx || m_scanPaths.count() <= idx) {
 					return empty;
 				}
 
-				return m_scanPaths.at(i);
+				return m_scanPaths.at(idx);
 			}
 
 			void setScanPath( const QString & path ) {
@@ -53,48 +55,48 @@ namespace Qlam {
 				m_fileCount = FileCountNotCalculated;
 			}
 
-			bool isValid( void ) const;
+			bool isValid() const;
 
-			static Scanner * startScan( const QString & scanPath ) {
+			static Scanner * startScan(const QString & scanPath) {
 				return startScan(QStringList() << scanPath);
 			}
 
-			static Scanner * startScan( const QStringList & scanPaths ) {
-				Scanner * ret = new Scanner(scanPaths);
+			static Scanner * startScan(const QStringList & scanPaths) {
+				auto * ret = new Scanner(scanPaths);
 
 				if(ret->isValid()) {
 					ret->startScan();
-				}
-				else {
+				} else {
 					delete ret;
-					ret = (Scanner *) 0;
+					ret = nullptr;
 				}
 
 				return ret;
 			}
 
-			void reset( void );
+			void reset();
+			int fileCount() const;
 
-			int fileCount( void ) const;
-			int infectedFileCount( void ) const {
+			int infectedFileCount() const {
 				return m_infections.count();
 			}
 
-			int scannedFileCount( void ) const {
+			int scannedFileCount() const {
 				 return m_scannedFileCount;
 			}
 
-			const InfectionList & infectedFiles( void ) const {
+			const InfectionList & infectedFiles() const {
 				return m_infections;
 			}
 
-			long int dataScanned( void ) const {
-				return (long int) m_scannedDataSize;
+			long long dataScanned() const {
+				return (long long) m_scannedDataSize;
 			}
 
+        // TODO provide more information in fileInfected() signals (e.g. if heuristic rather than actual virus)
 		Q_SIGNALS:
 			/* emitted when a scan starts */
-			void scanStarted( void );
+			void scanStarted();
 
 			/* emitted when a file is scanned */
 			void fileScanned( const QString & path );
@@ -108,40 +110,39 @@ namespace Qlam {
 			/* emitted when a file is scanned and is found to be infected */
 			void fileInfected( const QString & path, const QString & infection );
 
+			/* emitted when a file is scanned and is found to match a heuristic rule */
+			void fileMatchedHeuristic(const QString &, ScannerHeuristicMatch);
+
 			/* emitted when a file could not be scanned for some reason */
 			void fileScanFailed( const QString & path );
 
 			/* emitted when a scan completes successfully */
-			void scanComplete( void );
+			void scanComplete();
 
 			/* emitted when a scan completes successfully */
 			void scanComplete( int infectedFiles );
 
 			/* emitted when scan completes successfully and it found no infections */
-			void scanClean( void );
+			void scanClean();
 
 			/* emitted when scan completes successfully and it found infections */
-			void scanFoundInfections( void );
+			void scanFoundInfections();
 
 			/* scan did not complete successfully (NOT issued by abort())*/
-			void scanFailed( void );
+			void scanFailed();
 
 			/* scan finished because abort() was called */
-			void scanAborted( void );
+			void scanAborted();
 
 			/* for whetever reason, the scan is over */
-			void scanFinished( void );
+			void scanFinished();
 
 		public Q_SLOTS:
-			bool startScan( void );
-			void abort( void );
+			bool startScan();
+			void abort();
 
 		protected:
-//			void disposeScanEngine( void );
-			virtual void run( void );
-
-		protected Q_SLOTS:
-//			virtual void timerEvent( QTimerEvent * ev );
+			void run() override;
 
 		private:
 			static int countFiles( const QFileInfo & path );
@@ -149,7 +150,6 @@ namespace Qlam {
 			void scanFile( const QFileInfo & path );
 
 			static const int FileCountNotCalculated;
-//			static int s_clamavInit;
 
 			QStringList m_scanPaths;
 			TreeItem m_scannedDirs;
@@ -162,7 +162,6 @@ namespace Qlam {
 			unsigned long int m_scannedDataSize;
 			struct cl_engine * m_scanEngine;
 			bool m_abortFlag;
-//			int m_engineDisposeTimer;
 	};
 }
 

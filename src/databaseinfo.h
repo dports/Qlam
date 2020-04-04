@@ -7,42 +7,42 @@
 namespace Qlam {
 	class DatabaseInfo {
 		public:
-			DatabaseInfo( const QString & path = QString() );
+			explicit DatabaseInfo(const QString & = {});
 
-			bool isValid( void);
+			bool isValid();
 
-			QString path( void ) const {
+			QString path() const {
 				return m_path;
 			}
 
-			QString fileName( void ) const {
+			QString fileName() const {
 				return QFileInfo(m_path).fileName();
 			}
 
-			QString buildTime( void ) const {
+			QString buildTime() const {
 				return m_buildTime;
 			}
 
-			QString version( void ) const {
+			QString version() const {
 				return m_version;
 			}
 
-			int signatureCount( void ) const {
+			int signatureCount() const {
 				return m_signatures;
 			}
 
-			QString builderName( void ) const {
+			QString builderName() const {
 				return m_builderName;
 			}
 
-			QString md5( void ) const {
+			QString md5() const {
 				return m_md5;
 			}
 
 		private:
-			void parseLine( const QByteArray & line );
-			void parseBuffer( QByteArray & buffer );
-			void read( void );
+			void parseLine(const QByteArray &);
+			void parseBuffer(QByteArray & );
+			void read();
 
 			QString m_path;
 			QString m_buildTime;

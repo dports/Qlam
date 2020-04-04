@@ -16,8 +16,8 @@ namespace Ui {
 
 namespace Qlam {
 	class Scanner;
-	class TextElider;
 	class ScanProfile;
+	enum class ScannerHeuristicMatch;
 
 	class ScanWidget
 	: public QWidget {
@@ -27,79 +27,77 @@ namespace Qlam {
 		public:
 			static const int IndeterminateProgress;
 
-			explicit ScanWidget(QWidget *parent = nullptr);
-			~ScanWidget();
+			explicit ScanWidget(QWidget * = nullptr);
+			~ScanWidget() override;
 
-			inline QString scanPath( int i = 0 ) const {
-				if(0 > i || scanPathCount() <= i) {
+			inline QString scanPath(int idx = 0) const {
+				if(0 > idx || scanPathCount() <= idx) {
 					return QString();
 				}
 
-				return scanPaths().at(i);
+				return scanPaths().at(idx);
 			}
 
-			inline void setScanPath( const QString & path ) {
+			inline void setScanPath(const QString & path) {
 				clearScanPaths();
 				addScanPath(path);
 			}
 
-			bool setScanPath( int i, const QString & path );
+			bool setScanPath(int, const QString &);
 
-			QStringList scanPaths( void ) const;
-			void clearScanPaths( void );
-			void addScanPath( const QString & path );
-			int scanPathCount( void ) const;
+			QStringList scanPaths() const;
+			void clearScanPaths();
+			void addScanPath(const QString &);
+			int scanPathCount() const;
 
-			void setScanProfile( const ScanProfile & profile );
+			void setScanProfile(const ScanProfile &);
 
 		Q_SIGNALS:
-			void scanPathsChanged( void );
-			void scanButtonClicked( void );
-			void saveProfileButtonClicked( void );
-			void scanStarted( void );
-			void scanFinished( void );
+			void scanPathsChanged();
+			void scanButtonClicked();
+			void saveProfileButtonClicked();
+			void scanStarted();
+			void scanFinished();
 
 		protected:
-			virtual void dragEnterEvent( QDragEnterEvent * ev );
-			virtual void dropEvent( QDropEvent * ev );
-			virtual void timerEvent( QTimerEvent * ev );
+			void dragEnterEvent(QDragEnterEvent *) override;
+			void dropEvent(QDropEvent *) override;
+			void timerEvent(QTimerEvent *) override;
 
 		public Q_SLOTS:
-			void chooseScanFiles( void );
-			void chooseScanDirectory( void );
+			void chooseScanFiles();
+			void chooseScanDirectory();
 			void removeSelectedScanPaths();
 
-			void doScan( void );
-			void abortScan( void );
-			void showScanOutput( void ) {
+			void doScan();
+			void abortScan();
+			void showScanOutput() {
 				 setScanOutputVisible(true);
 			}
 
-			void hideScanOutput( void ) {
+			void hideScanOutput() {
 				 setScanOutputVisible(false);
 			}
 
-			void setScanOutputVisible( bool vis );
+			void setScanOutputVisible(bool vis);
 
-			void setScanStatus( const QString & text );
-			void clearScanOutput( void );
-			void setScanProgress( int pc );
-			void addInfection( const QString & path, const QString & virus );
+			void setScanStatus(const QString &);
+			void clearScanOutput();
+			void setScanProgress(int);
+			void addInfection(const QString &, const QString &);
+			void addMatchedHeuristic(const QString &, ScannerHeuristicMatch);
 
 		private Q_SLOTS:
-			void addFailedFileScan( const QString & path );
-			void slotScannerScannedFile( void );
-			void slotScanSucceeded( void );
-			void slotScanFailed( void );
-			void slotScanAborted( void );
-			void slotScanFinished( void );
-			void slotScanPathsSelectionChanged( void );
+			void addFailedFileScan(const QString &);
+			void slotScannerScannedFile();
+			void slotScanSucceeded();
+			void slotScanFailed();
+			void slotScanAborted();
+			void slotScanFinished();
+			void slotScanPathsSelectionChanged();
 
 		private:
-			static QString encodeNameForSaving( QString name );
-			static QString deodeNameFromFile( QString name );
-
-			Ui::ScanWidget *ui;
+			std::unique_ptr<Ui::ScanWidget> m_ui;
 			Scanner * m_scanner;
 			int m_scanDuration;
 			int m_scanDurationTimer;

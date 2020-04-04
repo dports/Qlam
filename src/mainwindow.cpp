@@ -1,5 +1,5 @@
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
+#include "ui/ui_mainwindow.h"
 
 #include <QtGlobal>
 
@@ -25,23 +25,23 @@
 using namespace Qlam;
 
 MainWindow::MainWindow(QWidget *parent) :
-	QMainWindow(parent),
-	ui(new Ui::MainWindow),
-	m_scanStack(0),
-	m_scanBackButton(0),
-	m_scanWidget(0),
-	m_scanProfileChooser(0),
-	m_updateWidget(0),
-	m_reportsWidget(0),
-	m_settingsDialogue(0) {
-	ui->setupUi(this);
+        QMainWindow(parent),
+        m_ui(std::make_unique<Ui::MainWindow>()),
+        m_scanStack(nullptr),
+        m_scanBackButton(nullptr),
+        m_scanWidget(nullptr),
+        m_scanProfileChooser(nullptr),
+        m_updateWidget(nullptr),
+        m_reportsWidget(nullptr),
+        m_settingsDialogue(nullptr) {
+	m_ui->setupUi(this);
 	addBuiltInWidgets();
-	ui->iconBar->setCurrentRow(0);
-//	ui->iconBar->setIconMargin(10);
+	m_ui->iconBar->setCurrentRow(0);
+//	m_ui->iconBar->setIconMargin(10);
 
 	readSettings();
 
-	connect(ui->iconBar, &QListWidget::currentRowChanged, ui->stackWidget, &QStackedWidget::setCurrentIndex);
+	connect(m_ui->iconBar, &QListWidget::currentRowChanged, m_ui->stackWidget, &QStackedWidget::setCurrentIndex);
 	connect(m_scanWidget, SIGNAL(saveProfileButtonClicked()), this, SLOT(slotSaveProfileButtonClicked()));
 	connect(m_scanWidget, SIGNAL(scanPathsChanged()), this, SLOT(slotScanPathsChanged()));
 	connect(m_scanWidget, SIGNAL(scanStarted()), this, SLOT(slotDisableBackButton()));
@@ -51,14 +51,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 void MainWindow::addBuiltInWidgets() {
-	Q_ASSERT(!!ui->iconBar);
+	Q_ASSERT(m_ui->iconBar);
 
 	{
 		QIcon fallbackIcon;
 		fallbackIcon.addFile(":iconbar/scan64", QSize(64, 64));
 		fallbackIcon.addFile(":iconbar/scan32", QSize(32, 32));
 		fallbackIcon.addFile(":iconbar/scan22", QSize(22, 22));
-		ui->iconBar->addItem(new QListWidgetItem(QIcon::fromTheme("system-search", fallbackIcon), tr("Scan")));
+		m_ui->iconBar->addItem(new QListWidgetItem(QIcon::fromTheme("system-search", fallbackIcon), tr("Scan")));
 	}
 
 	{
@@ -66,7 +66,7 @@ void MainWindow::addBuiltInWidgets() {
 		fallbackIcon.addFile(":iconbar/update64", QSize(64, 64));
 		fallbackIcon.addFile(":iconbar/update32", QSize(32, 32));
 		fallbackIcon.addFile(":iconbar/update22", QSize(22, 22));
-        ui->iconBar->addItem(new QListWidgetItem(QIcon::fromTheme("download", fallbackIcon), tr("Update")));
+        m_ui->iconBar->addItem(new QListWidgetItem(QIcon::fromTheme("download", fallbackIcon), tr("Update")));
 	}
 
 	{
@@ -74,7 +74,7 @@ void MainWindow::addBuiltInWidgets() {
 		fallbackIcon.addFile(":iconbar/reports64", QSize(64, 64));
 		fallbackIcon.addFile(":iconbar/reports32", QSize(32, 32));
 		fallbackIcon.addFile(":iconbar/reports22", QSize(22, 22));
-        ui->iconBar->addItem(new QListWidgetItem(QIcon::fromTheme("accessories-text-editor", fallbackIcon), tr("Reports")));
+        m_ui->iconBar->addItem(new QListWidgetItem(QIcon::fromTheme("accessories-text-editor", fallbackIcon), tr("Reports")));
 	}
 
 	{
@@ -82,14 +82,14 @@ void MainWindow::addBuiltInWidgets() {
 		fallbackIcon.addFile(":iconbar/settings64", QSize(64, 64));
 		fallbackIcon.addFile(":iconbar/settings32", QSize(32, 32));
 		fallbackIcon.addFile(":iconbar/settings22", QSize(22, 22));
-        ui->iconBar->addItem(new QListWidgetItem(QIcon::fromTheme("preferences-system", fallbackIcon), tr("Settings")));
+        m_ui->iconBar->addItem(new QListWidgetItem(QIcon::fromTheme("preferences-system", fallbackIcon), tr("Settings")));
 	}
 
-	m_scanStack = new QStackedWidget();
-	m_scanProfileChooser = new ScanProfileChooser();
-	m_scanWidget = new ScanWidget();
-	m_updateWidget = new UpdateWidget();
-	m_reportsWidget = new QWidget();
+	m_scanStack = new QStackedWidget;
+	m_scanProfileChooser = new ScanProfileChooser;
+	m_scanWidget = new ScanWidget;
+	m_updateWidget = new UpdateWidget;
+	m_reportsWidget = new QWidget;
 	m_settingsDialogue = new SettingsDialogue(qlamApp->settings());
 	m_settingsDialogue->hideCloseButton();
 
@@ -103,31 +103,31 @@ void MainWindow::addBuiltInWidgets() {
 
 	connect(m_scanProfileChooser, SIGNAL(profileChosen(int)), this, SLOT(slotScanProfileChosen(int)));
 
-	QVBoxLayout * scanLayout = new QVBoxLayout();
+	auto * scanLayout = new QVBoxLayout;
 	m_scanBackButton = new QToolButton(this);
 
 	QIcon fallbackIcon;
 	fallbackIcon.addFile(":/mainwindow/icons/back22", QSize(22, 22));
 	fallbackIcon.addFile(":/mainwindow/icons/back32", QSize(32, 32));
-	fallbackIcon.addFile(":/mainwindow/icons/back62", QSize(64, 64));
+	fallbackIcon.addFile(":/mainwindow/icons/back64", QSize(64, 64));
 	m_scanBackButton->setIcon(QIcon::fromTheme("go-previous", fallbackIcon));
 	m_scanBackButton->setEnabled(0 < m_scanStack->currentIndex());
-	QHBoxLayout * backButtonLayout = new QHBoxLayout();
+	auto * backButtonLayout = new QHBoxLayout;
 	backButtonLayout->addWidget(m_scanBackButton);
 	backButtonLayout->addStretch();
 
-	connect(m_scanBackButton, SIGNAL(clicked()), this, SLOT(slotScanBackButtonClicked()));
-	connect(m_scanStack, SIGNAL(currentChanged(int)), this, SLOT(syncScanBackButtonWithStack()));
+	connect(m_scanBackButton, &QToolButton::clicked, this, &MainWindow::slotScanBackButtonClicked);
+	connect(m_scanStack, &QStackedWidget::currentChanged, this, &MainWindow::syncScanBackButtonWithStack);
 
 	scanLayout->addLayout(backButtonLayout);
 	scanLayout->addWidget(m_scanStack);
 
-	QWidget * container = new QWidget(this);
+	auto * container = new QWidget(this);
 	container->setLayout(scanLayout);
-	ui->stackWidget->addWidget(container);
-	ui->stackWidget->addWidget(m_updateWidget);
-	ui->stackWidget->addWidget(m_reportsWidget);
-	ui->stackWidget->addWidget(m_settingsDialogue);
+	m_ui->stackWidget->addWidget(container);
+	m_ui->stackWidget->addWidget(m_updateWidget);
+	m_ui->stackWidget->addWidget(m_reportsWidget);
+	m_ui->stackWidget->addWidget(m_settingsDialogue);
 }
 
 
@@ -155,12 +155,7 @@ void MainWindow::writeSettings() const {
 //}
 
 
-MainWindow::~MainWindow() {
-	delete ui;
-}
-
-
-bool MainWindow::startScanByProfileName( const QString & profile ) {
+bool MainWindow::startScanByProfileName(const QString & profile) {
 	/* TODO refactor - store profiles here not in chooser */
 	for(auto * p : Application::instance()->scanProfiles()) {
 		if(p->name() == profile) {
@@ -175,7 +170,7 @@ bool MainWindow::startScanByProfileName( const QString & profile ) {
 }
 
 
-bool MainWindow::startCustomScan( const QStringList & paths ) {
+bool MainWindow::startCustomScan(const QStringList & paths) {
 	m_scanWidget->setScanProfile(Application::instance()->scanProfile(0));
 
 	for(const auto & path : paths) {
@@ -188,7 +183,7 @@ bool MainWindow::startCustomScan( const QStringList & paths ) {
 }
 
 
-void MainWindow::closeEvent( QCloseEvent * ev ) {
+void MainWindow::closeEvent(QCloseEvent * event) {
 	if(qlamApp->settings()->areModified()) {
 		switch(QMessageBox::question(this, tr("Quit"), tr("The settings have been modified since you last saved them.\n\nWould you like to save them before you exit?"), QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel)) {
 			case QMessageBox::Yes:
@@ -202,25 +197,25 @@ void MainWindow::closeEvent( QCloseEvent * ev ) {
 				break;
 
 			default:
-				ev->ignore();
+				event->ignore();
 				return;
 		}
 	}
 
 	/* save the GUI settings */
 	writeSettings();
-	ev->accept();
+	event->accept();
 }
 
 
-void MainWindow::slotScanProfileAdded( int i ) {
-	m_scanProfileChooser->addProfile(Application::instance()->scanProfile(i));
+void MainWindow::slotScanProfileAdded(int idx) {
+	m_scanProfileChooser->addProfile(Application::instance()->scanProfile(idx));
 }
 
 
-void MainWindow::slotScanProfileChosen( int i ) {
+void MainWindow::slotScanProfileChosen(int idx) {
 	/* TODO validate index */
-	m_scanWidget->setScanProfile(Application::instance()->scanProfile(i));
+	m_scanWidget->setScanProfile(Application::instance()->scanProfile(idx));
 	m_scanStack->setCurrentWidget(m_scanWidget);
 }
 
@@ -233,17 +228,17 @@ void MainWindow::slotSaveProfileButtonClicked() {
 		QString name = QInputDialog::getText(this, tr("Save scan profile"), tr("Enter a name for your scan profile"), QLineEdit::Normal, QString(), &ok);
 
 		if(ok && !name.isEmpty()) {
-			ScanProfile * p = new ScanProfile(name);
-			p->setPaths(m_scanWidget->scanPaths());
-			Application::instance()->addScanProfile(p);
+			auto * profile = new ScanProfile(name);
+			profile->setPaths(m_scanWidget->scanPaths());
+			Application::instance()->addScanProfile(profile);
 		}
 	}
 	else {
-		ScanProfile * p = Application::instance()->scanProfiles().at(idx);
+		ScanProfile * profile = Application::instance()->scanProfiles().at(idx);
 
-		if(!!p) {
-			p->clearPaths();
-			p->setPaths(m_scanWidget->scanPaths());
+		if(profile) {
+			profile->clearPaths();
+			profile->setPaths(m_scanWidget->scanPaths());
 		}
 	}
 }
@@ -254,18 +249,18 @@ void MainWindow::slotScanPathsChanged() {
 	/* TODO MainWindow should not need to know that index 0 is the custom
 	 * scan profile */
 	if(0 == idx) {
-		ScanProfile * p = Application::instance()->scanProfiles().at(idx);
-		p->clearPaths();
-		p->setPaths(m_scanWidget->scanPaths());
+		ScanProfile * profile = Application::instance()->scanProfiles().at(idx);
+		profile->clearPaths();
+		profile->setPaths(m_scanWidget->scanPaths());
 	}
 }
 
 void MainWindow::slotScanBackButtonClicked() {
-	int i = m_scanStack->currentIndex();
+	int idx = m_scanStack->currentIndex();
 
-	if(0 < i) {
-		--i;
-		m_scanStack->setCurrentIndex(i);
+	if(0 < idx) {
+		--idx;
+		m_scanStack->setCurrentIndex(idx);
 	}
 
 	syncScanBackButtonWithStack();
@@ -285,3 +280,5 @@ void MainWindow::slotDisableBackButton() {
 void MainWindow::slotEnableBackButton() {
 	m_scanBackButton->setEnabled(true);
 }
+
+MainWindow::~MainWindow() = default;

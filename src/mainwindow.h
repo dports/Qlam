@@ -22,24 +22,24 @@ namespace Qlam {
 		Q_OBJECT
 
 		public:
-			explicit MainWindow( QWidget *parent = nullptr );
-			~MainWindow();
+			explicit MainWindow(QWidget * = nullptr);
+		    ~MainWindow() override;
 
 		public Q_SLOTS:
 //            void startScan();
 
-			bool startScanByProfileName( const QString & profile );
-			bool startCustomScan( const QStringList & paths );
+			bool startScanByProfileName(const QString & profile);
+			bool startCustomScan(const QStringList & paths);
 
 		protected:
-			virtual void closeEvent( QCloseEvent * ev );
+	        void closeEvent(QCloseEvent *)  override;
 
 		private Q_SLOTS:
 			/* might need this if we want to prompt to save changes in current
 			 * widget before switching */
 //			void slotSyncStackWithList();
-			void slotScanProfileAdded( int i );
-			void slotScanProfileChosen( int i );
+			void slotScanProfileAdded(int);
+			void slotScanProfileChosen(int);
 			void slotSaveProfileButtonClicked();
 			void slotScanPathsChanged();
 			void slotScanBackButtonClicked();
@@ -52,7 +52,7 @@ namespace Qlam {
 			void readSettings();
 			void writeSettings() const;
 
-			Ui::MainWindow *ui;
+			std::unique_ptr<Ui::MainWindow> m_ui;
 			QStackedWidget * m_scanStack;
 			QToolButton * m_scanBackButton;
 			ScanWidget * m_scanWidget;

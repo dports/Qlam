@@ -22,30 +22,30 @@ namespace Qlam {
 				WriteError
 			};
 
-			VirusDatabaseDownloader( const QUrl & source, QString dest, QObject *parent = nullptr );
-			VirusDatabaseDownloader( const QUrl & source, QIODevice * dest, QObject *parent = nullptr );
+			VirusDatabaseDownloader(const QUrl &, const QString &, QObject * = nullptr);
+			VirusDatabaseDownloader(const QUrl &, QIODevice *, QObject * = nullptr);
 
-			bool isValid( void ) const;
+			bool isValid() const;
 
-			Error error( void ) const {
+			Error error() const {
 				return m_errorCode;
 			}
 
 		public Q_SLOTS:
-			bool download( void );
+			bool download();
 
 		signals:
-			void donwloadStarted( void );
-			void downloadProgress( qint64 bytes, qint64 total );
-			void downloadProgress( int pc );
-			void downloadSucceeded( void );
-			void downloadFailed( void );
+			void donwloadStarted();
+			void downloadProgress(qint64, qint64);
+			void downloadProgress(int);
+			void downloadSucceeded();
+			void downloadFailed();
 			void finished();
 
 		private Q_SLOTS:
-			void slotDownloadProgress( qint64, qint64 );
-			void slotDownloadFinished( void );
-			void slotReadFromReply( void );
+			void slotDownloadProgress(qint64, qint64);
+			void slotDownloadFinished();
+			void slotReadFromReply();
 
 		private:
 			QUrl m_source;

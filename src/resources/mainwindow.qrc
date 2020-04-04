@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/mainwindow/icons">
+        <file alias="back22">mainwindow/icons/22/back.png</file>
+        <file alias="back32">mainwindow/icons/32/back.png</file>
+        <file alias="back64">mainwindow/icons/64/back.png</file>
+    </qresource>
+</RCC>

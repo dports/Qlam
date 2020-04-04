@@ -6,6 +6,7 @@
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QButtonGroup>
 #include <QtCore/QList>
+
 #include "scanprofile.h"
 
 class QVBoxLayout;
@@ -21,29 +22,29 @@ namespace Qlam {
 			Q_OBJECT
 
 		public:
-			explicit ScanProfileChooser( QWidget * parent = nullptr );
-			~ScanProfileChooser( void );
+			explicit ScanProfileChooser(QWidget * = nullptr);
+			~ScanProfileChooser() override;
 
-			bool addProfile( const ScanProfile & profile );
-			bool removeProfile( int i );
+			bool addProfile(const ScanProfile &);
+			bool removeProfile(int);
 
-			ScanProfile currentProfile( void );
+			ScanProfile currentProfile();
 
-			int currentProfileIndex( void ) const {
+			int currentProfileIndex() const {
 				return m_currentProfileIndex;
 			}
 
 		public Q_SLOTS:
-			void clearProfiles( void );
+			void clearProfiles();
 
 		Q_SIGNALS:
-			void profileChosen( int );
+			void profileChosen(int);
 
 		private Q_SLOTS:
-			void slotProfileButtonClicked( QAbstractButton * b );
+			void slotProfileButtonClicked(QAbstractButton *);
 
 		private:
-			Ui::ScanProfileChooser *ui;
+			std::unique_ptr<Ui::ScanProfileChooser> m_ui;
 			QButtonGroup * m_buttons;
 			QVBoxLayout * m_buttonLayout;
 			int m_currentProfileIndex;

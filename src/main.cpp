@@ -10,13 +10,8 @@ using namespace Qlam;
 
 int main( int argc, char * argv[] ) {
 	QSettings::setDefaultFormat(QSettings::IniFormat);
-qDebug() << "creating application";
 	Qlam::Application app(argc, argv);
-qDebug() << "application:" << (void *) &app;
-qDebug() << "qApp is:" << (void *) qApp;
-qDebug() << "creating main window";
     Qlam::MainWindow w;
-qDebug() << "main window:" << (void *) &w;
     w.show();
 
 	for(int i = 1; i < argc; ++i) {

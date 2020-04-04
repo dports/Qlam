@@ -21,37 +21,37 @@ namespace Qlam {
 		Q_OBJECT
 
 		public:
-			explicit UpdateWidget(QWidget *parent = nullptr);
-			~UpdateWidget();
+			explicit UpdateWidget(QWidget * = nullptr);
+			~UpdateWidget() override;
 
-			QString statusText( void ) const;
-			void setStatusText( const QString & text );
+			QString statusText() const;
+			void setStatusText(const QString & text);
 
 		public Q_SLOTS:
-			void doUpdate( void );
+			void doUpdate();
 
 		Q_SIGNALS:
-			void updateClicked( void );
+			void updateClicked();
 
 		private Q_SLOTS:
-			void addDatabase( const DatabaseInfo & db );
+			void addDatabase(const DatabaseInfo & db);
 
-			void slotDatabaseInfoThreadFinished( void );
+			void slotDatabaseInfoThreadFinished();
 
-			void slotUpdatesFound( void );
-			void slotUpdateFailed( const QString & msg );
-			void slotUpdatingMainDatabase( int newVersion );
-			void slotUpdatingDailyDatabase( int newVersion );
-			void slotUpdatingBytecodeDatabase( int newVersion );
-			void slotUpdateSucceeded( void );
-			void slotUpdaterFinished( void );
-			void slotAlreadyUpToDate( void );
+			void slotUpdatesFound();
+			void slotUpdateFailed(const QString &);
+			void slotUpdatingMainDatabase(int);
+			void slotUpdatingDailyDatabase(int);
+			void slotUpdatingBytecodeDatabase(int);
+			void slotUpdateSucceeded();
+			void slotUpdaterFinished();
+			void slotAlreadyUpToDate();
 
-			void listDatabases( void );
-			void setUpdateButtonEnabledState( void );
+			void listDatabases();
+			void setUpdateButtonEnabledState();
 
 		private:
-			Ui::UpdateWidget * ui;
+			std::unique_ptr<Ui::UpdateWidget> m_ui;
 			Updater * m_updater;
 	};
 }

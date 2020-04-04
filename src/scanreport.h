@@ -14,16 +14,16 @@ namespace Qlam {
 
 	class ScanReport 	{
 		public:
-			enum Outcome {
+			enum class Outcome {
 				Unknown = 0,	/* outcome of scan is not known */
 				Failed,			/* scan failed to complete */
 				Clean,			/* scan completed and did not find any issues */
 				Infected			/* scan completed and found one or more issues */
 			};
 
-			ScanReport( void );
+			ScanReport();
 
-			inline Outcome outcome( void ) const {
+			inline Outcome outcome() const {
 				return m_outcome;
 			}
 
@@ -31,7 +31,7 @@ namespace Qlam {
 				m_outcome = outcome;
 			}
 
-			inline QDateTime startDateTime( void ) const {
+			inline QDateTime startDateTime() const {
 				return m_startTime;
 			}
 
@@ -39,7 +39,7 @@ namespace Qlam {
 				m_startTime = d;
 			}
 
-			inline QDate startDate( void ) const {
+			inline QDate startDate() const {
 				return m_startTime.date();
 			}
 
@@ -47,7 +47,7 @@ namespace Qlam {
 				m_startTime.setDate(d);
 			}
 
-			inline QTime startTime( void ) const {
+			inline QTime startTime() const {
 				return m_startTime.time();
 			}
 
@@ -55,7 +55,7 @@ namespace Qlam {
 				m_startTime.setTime(t);
 			}
 
-			inline QDateTime endDateTime( void ) const {
+			inline QDateTime endDateTime() const {
 				return m_endTime;
 			}
 
@@ -63,7 +63,7 @@ namespace Qlam {
 				m_endTime = d;
 			}
 
-			inline QDate endDate( void ) const {
+			inline QDate endDate() const {
 				return m_endTime.date();
 			}
 
@@ -71,7 +71,7 @@ namespace Qlam {
 				m_endTime.setDate(d);
 			}
 
-			inline QTime endTime( void ) const {
+			inline QTime endTime() const {
 				return m_endTime.time();
 			}
 
@@ -79,7 +79,7 @@ namespace Qlam {
 				m_endTime.setTime(t);
 			}
 
-			inline QString title( void ) const {
+			inline QString title() const {
 				return m_title;
 			}
 
@@ -87,11 +87,11 @@ namespace Qlam {
 				m_title = title;
 			}
 
-            inline const QStringList & scannedPaths( void ) {
+            inline const QStringList & scannedPaths() {
                 return m_scannedPaths;
             }
 
-            inline QStringList scannedPaths( void ) const {
+            inline QStringList scannedPaths() const {
 				return m_scannedPaths;
 			}
 
@@ -108,19 +108,19 @@ namespace Qlam {
 				m_scannedPaths.removeAt(i);
 			}
 
-			inline void clearScannedPaths( void ) {
+			inline void clearScannedPaths() {
 				m_scannedPaths.clear();
 			}
 
-			inline int scannedPathCount( void ) const {
+			inline int scannedPathCount() const {
 				return m_scannedPaths.count();
 			}
 
-            inline const QList<InfectedFile> & infectedFiles( void ) {
+            inline const QList<InfectedFile> & infectedFiles() {
 				return m_infections;
 			}
 
-			inline QList<InfectedFile> infectedFiles( void ) const {
+			inline QList<InfectedFile> infectedFiles() const {
 				return m_infections;
 			}
 
@@ -140,11 +140,11 @@ namespace Qlam {
 				m_infections.removeAt(i);
 			}
 
-			inline void clearInfectedFiles( void ) {
+			inline void clearInfectedFiles() {
 				m_infections.clear();
 			}
 
-            inline int infectedFileCount( void ) const {
+            inline int infectedFileCount() const {
 				return m_infections.count();
 			}
 

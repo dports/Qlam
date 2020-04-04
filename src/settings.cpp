@@ -2,7 +2,6 @@
 
 #include <QtCore/QDebug>
 #include <QtCore/QSettings>
-#include <QtCore/QDir>
 #include <QtCore/QUrl>
 
 #include "application.h"
@@ -10,51 +9,37 @@
 using namespace Qlam;
 
 Settings::Settings( QObject * parent )
+: Settings(QStringLiteral(), parent) {
+}
+
+
+Settings::Settings(QString filePath, QObject * parent)
 : QObject(parent),
-  m_filePath(),
+  m_filePath(std::move(filePath)),
   m_dbPath(),
   m_updateServerType(OfficialMirror),
   m_updateMirror(),
   m_customUpdateServer(),
   m_modified(false) {
-	construct();
+    load();
+    connect(this, &Settings::databasePathChanged, this, &Settings::changed);
+    connect(this, &Settings::updateServerTypeChanged, this, &Settings::changed);
+    connect(this, &Settings::updateMirrorChanged, this, &Settings::changed);
+    connect(this, qOverload<const QString &>(&Settings::customUpdateServerChanged), this, &Settings::changed);
 }
-
-
-Settings::Settings( const QString & filePath, QObject * parent )
-: QObject(parent),
-  m_filePath(filePath),
-  m_dbPath(),
-  m_updateServerType(OfficialMirror),
-  m_updateMirror(),
-  m_customUpdateServer(),
-  m_modified(false) {
-	construct();
-}
-
-
-void Settings::construct( void ) {
-	load();
-	connect(this, SIGNAL(databasePathChanged( QString )), this, SIGNAL(changed()));
-	connect(this, SIGNAL(updateServerTypeChanged( UpdateServerType )), this, SIGNAL(changed()));
-	connect(this, SIGNAL(updateMirrorChanged( QString )), this, SIGNAL(changed()));
-	connect(this, SIGNAL(customUpdateServerChanged( QString )), this, SIGNAL(changed()));
-	connect(this, SIGNAL(customUpdateServerChanged( QUrl )), this, SIGNAL(changed()));
-}
-
 
 bool Settings::setUpdateMirror( const QString & mirror ) {
 	if(mirror != m_updateMirror) {
 		/* TODO validate mirror */
 		m_updateMirror = mirror;
 		m_modified = true;
-		Q_EMIT(updateMirrorChanged(mirror));
+		Q_EMIT updateMirrorChanged(mirror);
 	}
 
 	return true;
 }
 
-QUrl Settings::updateServer( void ) const {
+QUrl Settings::updateServer() const {
 	if(Custom == updateServerType()) {
 		return customUpdateServer();
 	}
@@ -63,7 +48,7 @@ QUrl Settings::updateServer( void ) const {
 }
 
 
-void Settings::load( void ) {
+void Settings::load() {
 	QSettings * s = nullptr;
 
 	if(m_filePath.isEmpty()) {
@@ -80,7 +65,7 @@ void Settings::load( void ) {
 	setUpdateMirror(s->value("updateserver.mirror", "").toString());
 	setCustomUpdateServer(s->value("updateserver.customserver.url", "").toString());
 	m_modified = false;
-	Q_EMIT(changed());
+	Q_EMIT changed();
 qDebug() << "loaded settings from" << s->fileName();
 
 	delete s;

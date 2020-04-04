@@ -7,22 +7,22 @@
 namespace Qlam {
 	class InfectedFile {
 		public:
-			InfectedFile( const QString & path = QString() );
+			explicit InfectedFile(const QString & = {});
 
-			inline QString path( void ) const {
+			inline QString path() const {
 				return m_path;
 			}
 
-			inline const QStringList & viruses( void ) const {
+			inline const QStringList & viruses() const {
 				return m_viruses;
 			}
 
-			inline void addVirus( const QString & name ) {
+			inline void addVirus(const QString & name) {
 				m_viruses.append(name);
 			}
 
 		private:
-			void setPath( const QString & path ) {
+			void setPath(const QString & path) {
 				m_path = path;
 			}
 

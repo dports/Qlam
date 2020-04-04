@@ -27,57 +27,57 @@ namespace Qlam {
 			Q_OBJECT
 
 		public:
-			explicit Application( int & argc, char ** argv );
-			virtual ~Application( void );
+			explicit Application(int &, char **);
+			~Application() override;
 
-			inline static Application * instance( void ) {
+			inline static Application * instance() {
 				return s_instance;
 			}
 
-			static QString clamAvVersion( void );
-			bool clamAvInitialised( void ) const;
-			QString systemDatabasePath( void );
-			QList<DatabaseInfo> databases( void );
+			static QString clamAvVersion();
+			bool clamAvInitialised() const;
+			static QString systemDatabasePath();
+			QList<DatabaseInfo> databases();
 
 			/* discard the cache of database information so that the next call
 			 * to databases() rescans the databases files */
-//			void discardDatabaseInfoCache( void );
+//			void discardDatabaseInfoCache();
 
-			inline void addScanProfile( const ScanProfile & profile ) {
+			inline void addScanProfile(const ScanProfile & profile) {
 				addScanProfile(new ScanProfile(profile));
 			}
 
-			void addScanProfile( ScanProfile * profile );
+			void addScanProfile(ScanProfile * profile);
 
-			QList<ScanProfile *> scanProfiles( void ) const {
+			QList<ScanProfile *> scanProfiles() const {
 				return m_scanProfiles;
 			}
 
-			ScanProfile scanProfile( int i ) const;
-			int exec( void );
+			ScanProfile scanProfile(int) const;
+			int exec();
 
-			struct cl_engine * acquireEngine( void );
-			void releaseEngine( void );
+			struct cl_engine * acquireEngine();
+			void releaseEngine();
 
-			Settings * settings( void ) {
+			Settings * settings() {
 				return m_settings;
 			}
 
 		Q_SIGNALS:
-			void scanProfileAdded( const QString & name );
-			void scanProfileAdded( int idx );
+			void scanProfileAdded(const QString &);
+			void scanProfileAdded(int);
 
 		public Q_SLOTS:
 
 		protected:
-			virtual void timerEvent( QTimerEvent * ev );
+			void timerEvent(QTimerEvent *) override;
 
 		private Q_SLOTS:
-			void readScanProfiles( void );
-			void writeScanProfiles( void );
+			void readScanProfiles();
+			void writeScanProfiles();
 
 		private:
-			void disposeEngine( void );
+			void disposeEngine();
 
 			static Application * s_instance;
 			QList<ScanProfile *> m_scanProfiles;

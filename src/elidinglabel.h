@@ -14,29 +14,29 @@ namespace Qlam {
 			Q_OBJECT
 
 		public:
-			explicit ElidingLabel( QWidget * parent = nullptr, Qt::WindowFlags flags = 0 );
-			explicit ElidingLabel( const QString & text, QWidget * parent = nullptr, Qt::WindowFlags flags = 0 );
+			explicit ElidingLabel( QWidget * parent = nullptr, Qt::WindowFlags flags = {} );
+			explicit ElidingLabel( const QString & text, QWidget * parent = nullptr, Qt::WindowFlags flags = {} );
 
-			inline QString text( void ) const {
+			inline QString text() const {
 				return m_text;
 			}
 
 			void setElideMode( const Qt::TextElideMode & mode );
 
-			inline Qt::TextElideMode elideMode( void ) const {
+			inline Qt::TextElideMode elideMode() const {
 				return m_elideMode;
 			}
 
-		signals:
+		Q_SIGNALS:
 
-		public slots:
-			void setText( const QString & text );
+		public Q_SLOTS:
+			void setText(const QString &);
 
 		protected:
-			virtual void resizeEvent( QResizeEvent * ev );
+			void resizeEvent(QResizeEvent *) override;
 
 		private:
-			void doElide( void );
+			void doElide();
 
 			QString m_text;
 			Qt::TextElideMode m_elideMode;

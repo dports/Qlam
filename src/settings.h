@@ -17,103 +17,101 @@ namespace Qlam {
 				Custom
 			};
 
-			explicit Settings( QObject * parent = nullptr );
-			explicit Settings( const QString & filePath, QObject * parent = nullptr );
+			explicit Settings( QObject * = nullptr );
+			explicit Settings(QString, QObject * = nullptr );
 
-			inline QString databasePath( void ) const {
+			inline QString databasePath() const {
 				return m_dbPath;
 			}
 
-			inline bool usingSystemDatabases( void ) const {
+			inline bool usingSystemDatabases() const {
 				return m_dbPath.isEmpty();
 			}
 
-			inline UpdateServerType updateServerType( void ) const {
+			inline UpdateServerType updateServerType() const {
 				return m_updateServerType;
 			}
 
-			QString updateMirror( void ) const {
+			QString updateMirror() const {
 				return m_updateMirror;
 			}
 
-			QUrl customUpdateServer( void ) const {
+			QUrl customUpdateServer() const {
 				return m_customUpdateServer;
 			}
 
-			QUrl updateServer( void ) const;
+			QUrl updateServer() const;
 
-			bool areModified( void ) const {
+			bool areModified() const {
 				return m_modified;
 			}
 
 		public Q_SLOTS:
-			inline void setDatabasePath( const QString & path ) {
+			inline void setDatabasePath(const QString & path) {
 				if(path != m_dbPath) {
 					m_dbPath = path;
 					m_modified = true;
-					Q_EMIT(databasePathChanged(m_dbPath));
+					Q_EMIT databasePathChanged(m_dbPath);
 				}
 			}
 
-			inline void useSystemDatabases( void ) {
+			inline void useSystemDatabases() {
 				if(!m_dbPath.isEmpty()) {
 					m_dbPath = QString();
 					m_modified = true;
-					Q_EMIT(databasePathChanged(m_dbPath));
+					Q_EMIT databasePathChanged(m_dbPath);
 				}
 			}
 
-			inline void setUpdateServerType ( const UpdateServerType & type ) {
+			inline void setUpdateServerType (const UpdateServerType & type) {
 				if(type != m_updateServerType) {
 					m_updateServerType = type;
 					m_modified = true;
-					Q_EMIT(updateServerTypeChanged(type));
+					Q_EMIT updateServerTypeChanged(type);
 				}
 			}
 
-			bool setUpdateMirror( const QString & mirror );
+			bool setUpdateMirror(const QString &);
 
-			inline void setCustomUpdateServer( const QString & server ) {
+			inline void setCustomUpdateServer(const QString & server) {
 				setCustomUpdateServer(QUrl(server));
 			}
 
-			inline void setCustomUpdateServer( const QUrl & server ) {
+			inline void setCustomUpdateServer(const QUrl & server) {
 				if(server != m_customUpdateServer) {
 					m_customUpdateServer = server;
 					m_modified = true;
-					Q_EMIT(customUpdateServerChanged(server));
-					Q_EMIT(customUpdateServerChanged(server.toString()));
+					Q_EMIT customUpdateServerChanged(server);
+					Q_EMIT customUpdateServerChanged(server.toString());
 				}
 			}
 
-			void load( void );
+			void load();
 
-			void save( void ) const {
+			void save() const {
 				saveCopyAs(m_filePath);
 				m_modified = false;
 			}
 
-			void saveAs( const QString & path ) {
+			void saveAs(const QString & path) {
 				saveCopyAs(path);
 				m_filePath = path;
 				m_modified = false;
 			}
 
-			void saveCopyAs( const QString & path ) const;
+			void saveCopyAs(const QString &) const;
 
 		Q_SIGNALS:
-			void changed( void );
-			void databasePathChanged( const QString & path );
-			void updateServerTypeChanged( const UpdateServerType & type );
-			void updateMirrorChanged( const QString & mirror );
-			void customUpdateServerChanged( const QString & server );
-			void customUpdateServerChanged( const QUrl & server );
+			void changed();
+			void databasePathChanged(const QString &);
+			void updateServerTypeChanged(const UpdateServerType &);
+			void updateMirrorChanged(const QString &);
+			void customUpdateServerChanged(const QString &);
+			void customUpdateServerChanged(const QUrl &);
 
 		private:
-			void construct( void );
-
-			static QString updateServerTypeToString( const UpdateServerType & type );
-			static UpdateServerType stringToUpdateServerType( const QString & type );
+			static QString updateServerTypeToString(const UpdateServerType &);
+			static UpdateServerType stringToUpdateServerType(const QString &);
 
 			QString m_filePath;
 			QString m_dbPath;

@@ -17,33 +17,33 @@ namespace Qlam {
 			Q_OBJECT
 
 		public:
-			explicit SettingsWidget( Settings * settings, QWidget * parent = nullptr );
-			explicit SettingsWidget( QWidget * parent = nullptr );
-			~SettingsWidget( void );
+			explicit SettingsWidget(Settings *, QWidget * = nullptr);
+			explicit SettingsWidget(QWidget * = nullptr);
+			~SettingsWidget()override;
 
-			Settings * settings( void ) {
+			Settings * settings() {
 				return m_settings;
 			}
 
-			void setSettings( Settings * settings );
+			void setSettings(Settings *);
 
 		public Q_SLOTS:
-			void syncWithSettings( void );
-			void chooseDatabasePath( void );
+			void syncWithSettings();
+			void chooseDatabasePath();
 
 		private Q_SLOTS:
-			void slotDatabasePathChanged( void );
-			void slotServerTypeChanged( void );
-			void slotMirrorChanged( void );
-			void slotCustomServerChanged( void );
+			void slotDatabasePathChanged();
+			void slotServerTypeChanged();
+			void slotMirrorChanged();
+			void slotCustomServerChanged();
 
 		private:
-			void connectSettings( void );
-			void disconnectSettings( void );
-			void listDatabases( void );
-			void setupMirrors( void );
+			void connectSettings();
+			void disconnectSettings();
+			void listDatabases();
+			void setupMirrors();
 
-			Ui::SettingsWidget * ui;
+			std::unique_ptr<Ui::SettingsWidget> m_ui;
 			Settings * m_settings;
 	};
 }

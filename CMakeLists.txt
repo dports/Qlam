@@ -31,7 +31,11 @@ add_executable(Qlam
     src/virusdatabasedownloader.cpp
     src/settingswidget.cpp
     src/settingsdialogue.cpp
-    src/scanreport.cpp)
+    src/scanreport.cpp src/ScannerHeuristicMatch.h
+    src/resources/application.qrc
+    src/resources/mainwindow.qrc
+    src/resources/settingsdialogue.qrc
+)
 
 target_compile_features(Qlam PRIVATE cxx_range_for cxx_auto_type cxx_nullptr)
 target_link_libraries(Qlam clamav Qt5::Core Qt5::Widgets Qt5::Network)

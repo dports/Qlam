@@ -24,7 +24,7 @@ DatabaseInfo::DatabaseInfo( const QString & path )
 }
 
 
-bool DatabaseInfo::isValid( void ) {
+bool DatabaseInfo::isValid() {
 	return !m_path.isEmpty() && !m_buildTime.isEmpty() && !m_version.isEmpty() && (-1 < m_signatures) && !m_builderName.isEmpty();
 }
 
@@ -78,7 +78,7 @@ void DatabaseInfo::parseBuffer( QByteArray & buffer ) {
 }
 
 
-void DatabaseInfo::read( void ) {
+void DatabaseInfo::read() {
 	m_buildTime = QString();
 	m_version = QString();
 	m_signatures = 0;

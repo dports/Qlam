@@ -18,25 +18,25 @@ namespace Qlam {
 			Q_OBJECT
 
 		public:
-			explicit SettingsDialogue( QWidget * parent = nullptr );
-			explicit SettingsDialogue( Settings * settings, QWidget *parent = nullptr );
-			~SettingsDialogue( void );
+			explicit SettingsDialogue(QWidget * = nullptr);
+			explicit SettingsDialogue(Settings *, QWidget * = nullptr);
+			~SettingsDialogue() override;
 
-			void showCloseButton( void ) {
+			void showCloseButton() {
 				setCloseButtonVisible(true);
 			}
 
-			void hideCloseButton( void ) {
+			void hideCloseButton() {
 				setCloseButtonVisible(false);
 			}
 
-			void setCloseButtonVisible( bool v );
+			void setCloseButtonVisible(bool);
 
 		public Q_SLOTS:
-			void saveSettings( void ) const;
+			void saveSettings() const;
 
 		private:
-			Ui::SettingsDialogue * ui;
+			std::unique_ptr<Ui::SettingsDialogue> m_ui;
 			QPushButton * m_saveButton;
 	};
 }

@@ -8,83 +8,79 @@
 namespace Qlam {
 	class TreeItem {
 		public:
-			explicit TreeItem( const QString & name = QString() );
-			virtual ~TreeItem( void );
+			explicit TreeItem(QString = {}) noexcept;
+			virtual ~TreeItem();
 
-			void addChild( TreeItem * item );
-			void addChild( const QString & name );
+			void addChild(TreeItem *);
+			void addChild(const QString &);
 
-			void addPath( const QStringList & path );
+			void addPath(const QStringList &);
 
-			inline void addPath( const QString & path ) {
+			inline void addPath(const QString & path) {
 				addPath(path.split('/'));
 			}
 
-			inline int childCount( void ) const {
+			inline int childCount() const {
 				return m_children.count();
 			}
 
-			inline bool isTip( void ) const {
+			inline bool isTip() const {
 				return 0 == childCount();
 			}
 
-			inline bool isRoot( void ) const {
+			inline bool isRoot() const {
 				return !m_parent;
 			}
 
-			inline bool hasChildren( void ) {
+			inline bool hasChildren() {
 				return 0 < childCount();
 			}
 
-			QString child( int i ) const;
-			TreeItem * childItem( int i ) const;
-			TreeItem * takeChildItem( int i );
+			QString child(int) const;
+			TreeItem * childItem(int) const;
+			TreeItem * takeChildItem(int);
 
-			void clear( void );
+			void clear();
 
-			inline QString name( void ) const {
+			inline QString name() const {
 				return m_name;
 			}
 
-			inline void setName( const QString & name ) {
+			inline void setName(const QString & name) {
 				m_name = name;
 			}
 
-			inline bool containsChild( const QString & name ) {
-				return !!findChild(name);
+			inline bool containsChild(const QString & name) {
+				return findChild(name) != nullptr;
 			}
 
-			TreeItem * findChild( const QString & name ) const;
+			TreeItem * findChild(const QString &) const;
 
-			inline bool containsPath( const QStringList & path ) const {
-				return !!findPath(path);
+			inline bool containsPath(const QStringList & path) const {
+				return findPath(path) != nullptr;
 			}
 
-			inline bool containsPath( const QString path ) const {
-				return !!findPath(path.split('/'));
+			inline bool containsPath(const QString & path) const {
+				return findPath(path.split('/')) != nullptr;
 			}
 
-			TreeItem * findPath( const QStringList & path ) const;
+			TreeItem * findPath(const QStringList &) const;
 
-			inline TreeItem * findPath( const QString path ) const {
+			inline TreeItem * findPath(const QString & path) const {
 				return findPath(path.split('/'));
 			}
 
-			QString parent( void ) const;
+			QString parent() const;
 
-			TreeItem * parentItem( void ) const {
+			TreeItem * parentItem() const {
 				return m_parent;
 			}
 
 		private:
-			void setParent( TreeItem * parent );
+			void setParent(TreeItem * parent);
 			TreeItem * m_parent;
 			QList<TreeItem *> m_children;
 			QString m_name;
-
-#if defined(QT_DEBUG)
-			static int s_count;
-#endif
 	};
 }
 

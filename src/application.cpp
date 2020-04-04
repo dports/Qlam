@@ -36,21 +36,19 @@ using namespace Qlam;
  * are very scarce on the target platform */
 #define QLAM_APPLICATION_SCAN_ENGINE_DISPOSE_TIMEOUT 300000 /* 5 mins */
 
+Application * Application::s_instance = nullptr;
 
-Application * Application::s_instance = (Application *) nullptr;
-
-
-Application::Application( int & argc, char ** argv )
+Application::Application(int & argc, char ** argv)
 : QApplication(argc, argv),
   m_scanProfiles(),
   m_clamavInit(0),
-  m_scanEngine(0),
+  m_scanEngine(nullptr),
   m_engineLockCount(0),
   m_engineDisposeTimer(0),
-  m_settings(0) {
+  m_settings(nullptr) {
 	qRegisterMetaType<Qlam::DatabaseInfo>("DatabaseInfo");
 
-	if(!!s_instance) {
+	if(s_instance) {
 		qCritical() << "Application instance already created (" << ((void *) s_instance) << ")";
 	}
 
@@ -76,8 +74,7 @@ Application::Application( int & argc, char ** argv )
 	connect(this, SIGNAL(aboutToQuit()), this, SLOT(writeScanProfiles()));
 }
 
-
-Application::~Application( void ) {
+Application::~Application() {
 	writeScanProfiles();
 	qDeleteAll(m_scanProfiles);
 	m_scanProfiles.clear();
@@ -95,19 +92,17 @@ Application::~Application( void ) {
 	disposeEngine();
 }
 
-
-int Application::exec( void ) {
+int Application::exec() {
 	readScanProfiles();
 	return QApplication::exec();
 }
 
-
-struct cl_engine * Application::acquireEngine( void ) {
+struct cl_engine * Application::acquireEngine() {
 	if(!clamAvInitialised()) {
-		return (cl_engine *) 0;
+		return nullptr;
 	}
 
-	if(!!m_engineDisposeTimer) {
+	if(m_engineDisposeTimer) {
 qDebug() << "engine lock requested, stopping dispose timer";
 		killTimer(m_engineDisposeTimer);
 		m_engineDisposeTimer = 0;
@@ -151,8 +146,7 @@ qDebug() << "scan engine dispose timer is" << (0 == m_engineDisposeTimer ? "not"
 	return m_scanEngine;
 }
 
-
-void Application::releaseEngine( void ) {
+void Application::releaseEngine() {
 	Q_ASSERT(0 < m_engineLockCount);
 qDebug() << "releasing one lock on scan engine" << ((void *) m_scanEngine);
 	--m_engineLockCount;
@@ -167,15 +161,13 @@ qDebug() << "no remaining engine locks, starting dispose timer";
 	}
 }
 
-
-void Application::timerEvent( QTimerEvent * ev ) {
+void Application::timerEvent(QTimerEvent * ev) {
 	if(0 != m_engineDisposeTimer && ev->timerId() == m_engineDisposeTimer) {
 		disposeEngine();
 	}
 }
 
-
-void Application::disposeEngine( void ) {
+void Application::disposeEngine() {
 	Q_ASSERT(0 == m_engineLockCount);
 
 	if(m_engineDisposeTimer) {
@@ -188,24 +180,21 @@ qDebug() << "disposing scan engine" << ((void *) m_scanEngine);
 		cl_engine_free(m_scanEngine);
 	}
 
-	m_scanEngine = (struct cl_engine *) 0;
+	m_scanEngine = nullptr;
 }
 
-
-void Application::addScanProfile( ScanProfile * profile ) {
+void Application::addScanProfile(ScanProfile * profile) {
 	m_scanProfiles.append(profile);
-	Q_EMIT(scanProfileAdded(profile->name()));
-	Q_EMIT(scanProfileAdded(m_scanProfiles.count() - 1));
+	Q_EMIT scanProfileAdded(profile->name());
+	Q_EMIT scanProfileAdded(m_scanProfiles.count() - 1);
 }
 
-
-ScanProfile Application::scanProfile( int i ) const {
-	Q_ASSERT(i >= 0 && i < m_scanProfiles.count());
-	return *(m_scanProfiles.at(i));
+ScanProfile Application::scanProfile(int idx) const {
+	Q_ASSERT(idx >= 0 && idx < m_scanProfiles.count());
+	return *(m_scanProfiles.at(idx));
 }
 
-
-QString Application::clamAvVersion( void ) {
+QString Application::clamAvVersion() {
 	static QString s_version;
 
 	if(s_version.isEmpty()) {
@@ -226,28 +215,25 @@ QString Application::clamAvVersion( void ) {
 	return (s_version.isEmpty() ? tr("<unknown>") : s_version);
 }
 
-
-bool Application::clamAvInitialised( void ) const {
+bool Application::clamAvInitialised() const {
 	return CL_SUCCESS == m_clamavInit;
 }
 
-
-QString Application::systemDatabasePath( void ) {
+QString Application::systemDatabasePath() {
 	return QString::fromLatin1(cl_retdbdir());
 }
 
-
-QList<DatabaseInfo> Application::databases( void ) {
+QList<DatabaseInfo> Application::databases() {
 	QString path = settings()->databasePath();
 
 	if(path.isEmpty()) {
-		path = systemDatabasePath();
+		path = Application::systemDatabasePath();
 	}
 
 	QList<DatabaseInfo> ret;
 
 	if(!path.isEmpty()) {
-		for(QFileInfo fi : QDir(path).entryInfoList(QStringList() << "*.cvd" << "*.cld", QDir::Files | QDir::NoDotAndDotDot | QDir::Readable)) {
+		for(const auto & fi : QDir(path).entryInfoList(QStringList() << "*.cvd" << "*.cld", QDir::Files | QDir::NoDotAndDotDot | QDir::Readable)) {
 			DatabaseInfo inf(fi.absoluteFilePath());
 
 			if(inf.isValid()) {
@@ -265,42 +251,41 @@ QList<DatabaseInfo> Application::databases( void ) {
 	return ret;
 }
 
-
-void Application::readScanProfiles( void ) {
+void Application::readScanProfiles() {
 	QSettings settings;
 
 	if(!settings.value("haveProfiles").isValid()) {
 		/* no attempt has ever been made to write a set of user profiles (even an
 		 * empty one, so we set up just one default one for the user's home
 		 * directory */
-		ScanProfile * p = new ScanProfile("Home directory");
-		p->addPath(QDir::homePath());
-		addScanProfile(p);
+		auto * profile = new ScanProfile("Home directory");
+		profile->addPath(QDir::homePath());
+		addScanProfile(profile);
 	}
 	else {
-		int n = settings.beginReadArray("scanprofiles");
+		int profileCount = settings.beginReadArray("scanprofiles");
 
-		for(int i = 0; i < n; ++i) {
-			settings.setArrayIndex(i);
-			ScanProfile * p = new ScanProfile(settings.value("name").toString());
-			p->setPaths(settings.value("paths").toStringList());
-			addScanProfile(p);
+		for(int idx = 0; idx < profileCount; ++idx) {
+			settings.setArrayIndex(idx);
+			auto * profile = new ScanProfile(settings.value("name").toString());
+			profile->setPaths(settings.value("paths").toStringList());
+			addScanProfile(profile);
 		}
 
 		settings.endArray();
 	}
 }
 
-void Application::writeScanProfiles( void ) {
+void Application::writeScanProfiles() {
 	QSettings settings;
 	settings.setValue("haveProfiles", "1");
 	settings.beginWriteArray("scanprofiles");
 
-	for(int i = 1; i < m_scanProfiles.count(); ++i) {
-		settings.setArrayIndex(i - 1);
-		ScanProfile * p = m_scanProfiles.at(i);
-		settings.setValue("name", p->name());
-		settings.setValue("paths", p->paths());
+	for(int idx = 1; idx < m_scanProfiles.count(); ++idx) {
+		settings.setArrayIndex(idx - 1);
+		ScanProfile * profile = m_scanProfiles.at(idx);
+		settings.setValue("name", profile->name());
+		settings.setValue("paths", profile->paths());
 	}
 
 	settings.endArray();

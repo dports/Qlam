@@ -2,44 +2,25 @@
 
 using namespace Qlam;
 
-#if defined(QT_DEBUG)
-#include <QDebug>
-int TreeItem::s_count = 0;
-#endif
-
-
-TreeItem::TreeItem( const QString & name )
-: m_parent(0),
+TreeItem::TreeItem(QString name) noexcept
+: m_parent(nullptr),
   m_children(),
-  m_name(name) {
-#if defined(QT_DEBUG)
-//qDebug() << "creating TreeItem" << name << "(" << ((void *) this) << ")";
-s_count++;
-#endif
+  m_name(std::move(name)) {
 }
 
-
 TreeItem::~TreeItem() {
-#if defined(QT_DEBUG)
-//qDebug() << "deleting TreeItem(" << ((void *) this) << ")";
-s_count--;
-//qDebug() << s_count << "TreeItems remain";
-#endif
 	clear();
 }
 
-
-void TreeItem::addChild( TreeItem * item ) {
+void TreeItem::addChild(TreeItem * item) {
 	item->setParent(this);
 }
 
-
-void TreeItem::addChild( const QString & name ) {
+void TreeItem::addChild(const QString & name) {
 	addChild(new TreeItem(name));
 }
 
-
-void TreeItem::addPath( const QStringList & path ) {
+void TreeItem::addPath(const QStringList & path) {
 	if(path.isEmpty()) {
 		return;
 	}
@@ -56,46 +37,40 @@ void TreeItem::addPath( const QStringList & path ) {
 	child->addPath(myPath);
 }
 
-
-QString TreeItem::child( int i ) const {
-	return childItem(i)->name();
+QString TreeItem::child(int idx) const {
+	return childItem(idx)->name();
 }
 
-
-TreeItem * TreeItem::childItem( int i ) const {
-	Q_ASSERT(i >= 0 && i < m_children.count());
-	return m_children.at(i);
+TreeItem * TreeItem::childItem(int idx) const {
+	Q_ASSERT(idx >= 0 && idx < m_children.count());
+	return m_children.at(idx);
 }
 
-
-TreeItem * TreeItem::takeChildItem( int i ) {
-	Q_ASSERT(i >= 0 && i < m_children.count());
-	TreeItem * ret = m_children.at(i);
-	ret->setParent(0);
+TreeItem * TreeItem::takeChildItem(int idx) {
+	Q_ASSERT(idx >= 0 && idx < m_children.count());
+	TreeItem * ret = m_children.at(idx);
+	ret->setParent(nullptr);
 	return ret;
 }
-
 
 void TreeItem::clear() {
 	qDeleteAll(m_children);
 	m_children.clear();
 }
 
-
-TreeItem * TreeItem::findChild( const QString & name ) const {
+TreeItem * TreeItem::findChild(const QString & name) const {
 	for(auto * child : m_children) {
 		if(child->name() == name) {
 			return child;
 		}
 	}
 
-	return 0;
+	return nullptr;
 }
 
-
-TreeItem * TreeItem::findPath( const QStringList & path ) const {
+TreeItem * TreeItem::findPath(const QStringList & path) const {
 	if(path.isEmpty()) {
-		return 0;
+		return nullptr;
 	}
 
 	QStringList myPath(path);
@@ -108,25 +83,23 @@ TreeItem * TreeItem::findPath( const QStringList & path ) const {
 	return child->findPath(myPath);
 }
 
-
 QString TreeItem::parent() const {
-	Q_ASSERT(!!m_parent);
+	Q_ASSERT(m_parent != nullptr);
 	return m_parent->name();
 }
 
-
-void TreeItem::setParent( TreeItem * parent ) {
+void TreeItem::setParent(TreeItem * parent) {
 	if(parent == m_parent) {
 		return;
 	}
 
-	if(!!m_parent) {
+	if(m_parent != nullptr) {
 		m_parent->m_children.removeAll(this);
 	}
 
 	m_parent = parent;
 
-	if(!!m_parent) {
+	if(m_parent != nullptr) {
 		m_parent->m_children.append(this);
 	}
 }

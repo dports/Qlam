@@ -26,7 +26,7 @@ void UpdateWidgetDatabaseInfoHelperThread::run() {
 
 	if(!path.isEmpty()) {
 		for(const auto & db : qlamApp->databases()) {
-			Q_EMIT(databaseInfoRead(db));
+			Q_EMIT databaseInfoRead(db);
 		}
 	}
 }
