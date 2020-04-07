@@ -33,6 +33,7 @@
 
 using namespace Qlam;
 
+// TODO use an optional instead
 const int Scanner::FileCountNotCalculated = -1;
 TreeItem Scanner::s_countedDirs;
 
@@ -242,6 +243,7 @@ qDebug() << "scan is already running";
 
 void Scanner::run() {
 	reset();
+	startFileCounter();
 	Application * app = Application::instance();
 
 	Q_EMIT(scanStarted());
@@ -285,6 +287,10 @@ qDebug() << "emitting scanComplete()";
 	/* we don't need the tree of scanned dirs any more, it's only to prevent
 	 * recursive scanning of circular symlinks */
 	m_scannedDirs.clear();
+
+	// file counter watches abort flag, so wait for it to resolve
+	m_counter.wait();
+	m_counter = {};
 	m_abortFlag = false;
 
 	Q_EMIT(scanFinished());
@@ -309,22 +315,46 @@ void Scanner::reset() {
 
 
 int Scanner::fileCount() const {
-	if(FileCountNotCalculated == m_fileCount) {
-		m_fileCount = 0;
-		s_countedDirs.clear();
-
-		for(const auto & path : scanPaths()) {
-			int myCount = countFiles(QFileInfo(path));
-
-			if(0 < myCount) {
-				m_fileCount += myCount;
-			}
-		}
-
-		/* these are only required while the count is in progress,
-		 * so we can safely clear here */
-		s_countedDirs.clear();
-	}
-
 	return m_fileCount;
+}
+
+
+/**
+ * Start the asynchronous task to count the files to scan.
+ *
+ * While this method includes code to try to gracefully exit any previous count task, it's not guaranteed. You should
+ * try to be sure that any previous count has stopped before calling this.
+ */
+void Scanner::startFileCounter() {
+    if (m_counter.valid() && std::future_status::timeout != m_counter.wait_for(std::chrono::seconds(3))) {
+        // TODO log a warning that we're releasing a running asynchronous task
+    }
+
+    m_counter = std::async(std::launch::async, [this] () -> int {
+        m_fileCount = FileCountNotCalculated;
+        int count = 0;
+        s_countedDirs.clear();
+
+        for(const auto & path : scanPaths()) {
+            int countForPath = countFiles(QFileInfo(path));
+
+            if(0 < countForPath) {
+                count += countForPath;
+            }
+
+            if (m_abortFlag) {
+                break;
+            }
+        }
+
+        // these are only required while the count is in progress,  so we can safely clear here
+        s_countedDirs.clear();
+
+        if (m_abortFlag) {
+            m_fileCount = FileCountNotCalculated;
+        } else {
+            m_fileCount = count;
+            Q_EMIT fileCountComplete(count);
+        }
+    });
 }

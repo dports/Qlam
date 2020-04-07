@@ -96,6 +96,9 @@ namespace Qlam {
 			/* emitted when a scan starts */
 			void scanStarted( void );
 
+			/* emitted when the async task to count the files to be scanned has completed */
+			void fileCountComplete(int);
+
 			/* emitted when a file is scanned */
 			void fileScanned( const QString & path );
 
@@ -144,6 +147,7 @@ namespace Qlam {
 //			virtual void timerEvent( QTimerEvent * ev );
 
 		private:
+	        void startFileCounter();
 			static int countFiles( const QFileInfo & path );
 			void scanEntity( const QFileInfo & path );
 			void scanFile( const QFileInfo & path );
@@ -162,6 +166,7 @@ namespace Qlam {
 			unsigned long int m_scannedDataSize;
 			struct cl_engine * m_scanEngine;
 			bool m_abortFlag;
+			std::future<int> m_counter;
 //			int m_engineDisposeTimer;
 	};
 }
