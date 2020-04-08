@@ -1,15 +1,11 @@
 #include "scanner.h"
 
-/** \todo
- * - after first use of scanner (i.e. first call to start()),
- *   subsequent scans (using the same paths) appear to scan all files but report
- *   that zero data was scanned. Is this just because the engine
- *   knows that nothing has changed? The engine is definitely reporting that
- *   each scanned file is clean and it is definitely being asked to scan all
- *   the same files.
- */
+// TODO after first use of scanner (i.e. first call to start()), subsequent scans (using the same paths) appear to scan
+//   all files but report that zero data was scanned. Is this just because the engine knows that nothing has changed?
+//   The engine is definitely reporting that each scanned file is clean and it is definitely being asked to scan all
+//   the same files.
+#include <numeric>
 #include <QtGlobal>
-
 #include <QtCore/QDebug>
 #include <QtCore/QThread>
 #include <QtCore/QStringLiteral>
@@ -19,17 +15,14 @@
 #include <QtCore/QRegExp>
 #include <QtCore/QDir>
 #include <QtCore/QTimerEvent>
-
 #include <clamav.h>
-
 #include "application.h"
 #include "infectedfile.h"
 #include "treeitem.h"
-#include "ScannerHeuristicMatch.h"
+#include "scannerheuristicmatch.h"
 
-/* how long to wait for a running scan to abort before forcing it
- * in the destructor - comes into play when the application closes
- * (i.e. user clicks close button) while a scan is in progress */
+// how long to wait for a running scan to abort before forcing it in the destructor - comes into
+// play when the application closes (i.e. user clicks close button) while a scan is in progress
 #define QLAM_SCANNER_DESTROY_WAIT_TIMEOUT 20000
 
 using namespace Qlam;
@@ -38,7 +31,7 @@ static constexpr uint32_t DefaultGeneralScanOptions =
     static_cast<uint32_t>(CL_SCAN_GENERAL_ALLMATCHES) |                    // scan in all-match mode
     static_cast<uint32_t>(CL_SCAN_GENERAL_COLLECT_METADATA) |              // collect metadata (--gen-json)
     static_cast<uint32_t>(CL_SCAN_GENERAL_HEURISTICS) |                    // option to enable heuristic alerts
-//    static_cast<uint32_t>(CL_SCAN_GENERAL_HEURISTIC_PRECEDENCE) |          // allow heuristic match to take precedence.
+//    static_cast<uint32_t>(CL_SCAN_GENERAL_HEURISTIC_PRECEDENCE) |        // allow heuristic match to take precedence.
     static_cast<uint32_t>(CL_SCAN_GENERAL_UNPRIVILEGED)                    // scanner will not have read access to files.
     ;
 
@@ -56,22 +49,26 @@ static constexpr uint32_t DefaultParseScanOptions =
     ;
 
 static constexpr uint32_t DefaultHeuristicScanOptions =
-    static_cast<uint32_t>(CL_SCAN_HEURISTIC_BROKEN) |                                             /* alert on broken PE and broken ELF files */
-    static_cast<uint32_t>(CL_SCAN_HEURISTIC_EXCEEDS_MAX) |                                        /* alert when files exceed scan limits (filesize, max scansize, or max recursion depth) */
-    static_cast<uint32_t>(CL_SCAN_HEURISTIC_PHISHING_SSL_MISMATCH) |                              /* alert on SSL mismatches */
-    static_cast<uint32_t>(CL_SCAN_HEURISTIC_PHISHING_CLOAK) |                                     /* alert on cloaked URLs in emails */
-    static_cast<uint32_t>(CL_SCAN_HEURISTIC_MACROS) |                                             /* alert on OLE2 files containing macros */
-    static_cast<uint32_t>(CL_SCAN_HEURISTIC_ENCRYPTED_ARCHIVE) |                                  /* alert if archive is encrypted (rar, zip, etc) */
-    static_cast<uint32_t>(CL_SCAN_HEURISTIC_ENCRYPTED_DOC) |                                      /* alert if a document is encrypted (pdf, docx, etc) */
-    static_cast<uint32_t>(CL_SCAN_HEURISTIC_PARTITION_INTXN)                                      /* alert if partition table size doesn't make sense */
-//    static_cast<uint32_t>(CL_SCAN_HEURISTIC_STRUCTURED) |                                         /* data loss prevention options, i.e. alert when detecting personal information */
-//    static_cast<uint32_t>(CL_SCAN_HEURISTIC_STRUCTURED_SSN_NORMAL) |                              /* alert when detecting social security numbers */
-//    static_cast<uint32_t>(CL_SCAN_HEURISTIC_STRUCTURED_SSN_STRIPPED)                              /* alert when detecting stripped social security numbers */
+    static_cast<uint32_t>(CL_SCAN_HEURISTIC_BROKEN) |                     // alert on broken PE and broken ELF files 
+    static_cast<uint32_t>(CL_SCAN_HEURISTIC_EXCEEDS_MAX) |                // alert when files exceed scan limits (filesize, max scansize, or max recursion depth) 
+    static_cast<uint32_t>(CL_SCAN_HEURISTIC_PHISHING_SSL_MISMATCH) |      // alert on SSL mismatches 
+    static_cast<uint32_t>(CL_SCAN_HEURISTIC_PHISHING_CLOAK) |             // alert on cloaked URLs in emails 
+    static_cast<uint32_t>(CL_SCAN_HEURISTIC_MACROS) |                     // alert on OLE2 files containing macros 
+    static_cast<uint32_t>(CL_SCAN_HEURISTIC_ENCRYPTED_ARCHIVE) |          // alert if archive is encrypted (rar, zip, etc) 
+    static_cast<uint32_t>(CL_SCAN_HEURISTIC_ENCRYPTED_DOC) |              // alert if a document is encrypted (pdf, docx, etc) 
+    static_cast<uint32_t>(CL_SCAN_HEURISTIC_PARTITION_INTXN)              // alert if partition table size doesn't make sense 
+//    static_cast<uint32_t>(CL_SCAN_HEURISTIC_STRUCTURED) |               // data loss prevention options, i.e. alert when detecting personal information 
+//    static_cast<uint32_t>(CL_SCAN_HEURISTIC_STRUCTURED_SSN_NORMAL) |    // alert when detecting social security numbers 
+//    static_cast<uint32_t>(CL_SCAN_HEURISTIC_STRUCTURED_SSN_STRIPPED)    // alert when detecting stripped social security numbers 
     ;
 
 static constexpr uint32_t DefaultMailScanOptions = static_cast<uint32_t>(CL_SCAN_MAIL_PARTIAL_MESSAGE);
 
 static const auto HeuristicMatchPrefix = QStringLiteral("Heuristics.");
+
+// error return codes for countFiles()
+static const int ErrPathDoesNotExist = -1;
+static const int ErrUncountablePath = -2;
 
 const int Scanner::FileCountNotCalculated = -1;
 TreeItem Scanner::s_countedDirs;
@@ -80,7 +77,7 @@ Scanner::Scanner( const QString & scanPath, QObject * parent )
 : QThread(parent),
   m_scanPaths(),
   m_scannedDirs(),
-  m_infections(),
+  m_issues(),
   m_fileCount(FileCountNotCalculated),
   m_scannedFileCount(0),
   m_failedScanCount(0),
@@ -95,7 +92,7 @@ Scanner::Scanner( const QStringList & scanPaths, QObject * parent )
 : QThread(parent),
   m_scanPaths(),
   m_scannedDirs(),
-  m_infections(),
+  m_issues(),
   m_fileCount(-1),
   m_scannedFileCount(0),
   m_failedScanCount(0),
@@ -169,7 +166,6 @@ void Scanner::scanFile( const QFileInfo & path ) {
 	Q_ASSERT_X(m_scanEngine != nullptr, "Scanner::scanFile()", "called with no scan engine");
 	const char * virusName;
 
-	// TODO store this rather than rebuild for every file scanned
 	struct cl_scan_options opts {
 	    DefaultGeneralScanOptions,
 	    DefaultParseScanOptions,
@@ -186,10 +182,10 @@ void Scanner::scanFile( const QFileInfo & path ) {
 		++m_scannedFileCount;
 	}
 	else if(CL_VIRUS == ret) {
-		InfectedFile inf(path.filePath());
+		FileWithIssues inf(path.filePath());
 		QString qstrVirusName = QString::fromUtf8(virusName);
-		inf.addVirus(qstrVirusName);
-		m_infections.append(InfectedFile(path.filePath()));
+		inf.addIssue(qstrVirusName);
+		m_issues.append(FileWithIssues(path.filePath()));
 
 		if (qstrVirusName.startsWith(HeuristicMatchPrefix)) {
 		    ScannerHeuristicMatch heuristic = ScannerHeuristicMatch::Generic;
@@ -234,46 +230,38 @@ qDebug() << "failure when scanning" << path.filePath();
 
 
 int Scanner::countFiles( const QFileInfo & path ) {
-	if(!path.exists()) {
-qDebug() << "path" << path.filePath() << "does not exist";
-		return -1;
-	}
+    if (!path.exists()) {
+        qDebug() << "path" << path.filePath() << "does not exist";
+        return ErrPathDoesNotExist;
+    }
 
-	if(path.isDir()) {
-		/* TODO this is a temporary fix for the file count blocking in the GUI
-		 * thread. this is no way to resolve the issue properly! */
-		Application::processEvents();
-		QFileInfo myPath(path);
+    if (path.isDir()) {
+        QFileInfo myPath(path);
 
-		while(myPath.isSymLink()) {
-			myPath.setFile(myPath.symLinkTarget());
-		}
+        while (myPath.isSymLink()) {
+            myPath.setFile(myPath.symLinkTarget());
+        }
 
-		if(s_countedDirs.containsPath(myPath.absoluteFilePath())) {
-qDebug() << "ultimate target of" << path.filePath() << "(" << myPath.absoluteFilePath() << ") already counted";
-			return 0;
-		}
+        if (s_countedDirs.containsPath(myPath.absoluteFilePath())) {
+            qDebug() << "ultimate target of" << path.filePath() << "(" << myPath.absoluteFilePath()
+                     << ") already counted";
+            return 0;
+        }
 
-		s_countedDirs.addPath(myPath.absoluteFilePath());
-		QFileInfoList entries = QDir(path.filePath()).entryInfoList(QDir::NoDotAndDotDot | QDir::Dirs | QDir::Files, QDir::DirsFirst | QDir::Name | QDir::IgnoreCase | QDir::LocaleAware);
-		int count = 0;
+        s_countedDirs.addPath(myPath.absoluteFilePath());
+        QFileInfoList entries = QDir(path.filePath()).entryInfoList(QDir::NoDotAndDotDot | QDir::Dirs | QDir::Files,
+                                                                    QDir::DirsFirst | QDir::Name |
+                                                                    QDir::IgnoreCase | QDir::LocaleAware);
 
-		for(const QFileInfo& entry : entries) {
-			int myCount = countFiles(entry);
-
-			if(0 < myCount) {
-				count += myCount;
-			}
-		}
-
-		return count;
-	}
-	else if(path.isFile()) {
-		return 1;
-	}
+        return std::reduce(entries.cbegin(), entries.cend(), 0, [](int count, auto entry) {
+            return count + countFiles(entry);
+        });
+    } else if (path.isFile()) {
+        return 1;
+    }
 
 qDebug() << "unknown path" << path.filePath() << "(" << path.canonicalFilePath() << ")";
-	return -2;
+    return  ErrUncountablePath;
 }
 
 bool Scanner::isValid() const {
@@ -339,17 +327,17 @@ qDebug() << "failed to acquire scan engine";
 	else {
 qDebug() << "emitting scanComplete()";
 		Q_EMIT scanComplete();
-		Q_EMIT scanComplete(m_infections.count());
+		Q_EMIT scanComplete(m_issues.count());
 
 		/* we only emit clean scan signal if scan completed successfully and there
 		 * were no infections found. if scan fails or is aborted, we don't emit
 		 * this signal. */
-		if(0 == m_infections.count()) {
+		if(0 == m_issues.count()) {
 			Q_EMIT scanClean();
 		}
 	}
 
-	if(0 < m_infections.count()) {
+	if(0 < m_issues.count()) {
 		Q_EMIT scanFoundInfections();
 	}
 
@@ -372,30 +360,35 @@ void Scanner::abort() {
 void Scanner::reset() {
 	m_scannedDirs.clear();
 	s_countedDirs.clear();
-	m_infections.clear();
+	m_issues.clear();
 	m_scannedFileCount = 0;
 	m_failedScanCount = 0;
 	m_scannedDataSize = 0;
 }
 
 
-int Scanner::fileCount() const {
+std::future<int> Scanner::fileCount() const {
 	if(FileCountNotCalculated == m_fileCount) {
-		m_fileCount = 0;
-		s_countedDirs.clear();
+        return std::async([this]() {
+            m_fileCount = 0;
+            s_countedDirs.clear();
 
-		for(const auto & path : scanPaths()) {
-			int myCount = countFiles(QFileInfo(path));
+            for (const auto &path : scanPaths()) {
+                int count = countFiles(QFileInfo(path));
 
-			if(0 < myCount) {
-				m_fileCount += myCount;
-			}
-		}
+                // count is < 0 on error
+                if (0 < count) {
+                    m_fileCount += count;
+                }
+            }
 
-		/* these are only required while the count is in progress,
-		 * so we can safely clear here */
-		s_countedDirs.clear();
-	}
+            // these are only required while the count is in progress, so we can safely clear here
+            s_countedDirs.clear();
+            return m_fileCount;
+        });
+    }
 
-	return m_fileCount;
+	return std::async([this] () {
+	    return m_fileCount;
+	});
 }

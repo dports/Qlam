@@ -24,7 +24,7 @@ namespace Qlam {
 		Q_OBJECT
 
 		public:
-			typedef QList<InfectedFile> InfectionList;
+			using IssueList = QList<FileWithIssues>;
 
 			explicit Scanner( const QString & = QString(), QObject * = nullptr );
 			explicit Scanner( const QStringList &, QObject * = nullptr );
@@ -75,18 +75,18 @@ namespace Qlam {
 			}
 
 			void reset();
-			int fileCount() const;
+			std::future<int> fileCount() const;
 
 			int infectedFileCount() const {
-				return m_infections.count();
+				return m_issues.count();
 			}
 
 			int scannedFileCount() const {
 				 return m_scannedFileCount;
 			}
 
-			const InfectionList & infectedFiles() const {
-				return m_infections;
+			const IssueList & infectedFiles() const {
+				return m_issues;
 			}
 
 			long long dataScanned() const {
@@ -145,9 +145,9 @@ namespace Qlam {
 			void run() override;
 
 		private:
-			static int countFiles( const QFileInfo & path );
-			void scanEntity( const QFileInfo & path );
-			void scanFile( const QFileInfo & path );
+			static int countFiles(const QFileInfo &);
+			void scanEntity(const QFileInfo &);
+			void scanFile(const QFileInfo &);
 
 			static const int FileCountNotCalculated;
 
@@ -155,11 +155,11 @@ namespace Qlam {
 			TreeItem m_scannedDirs;
 			static TreeItem s_countedDirs;
 
-			InfectionList m_infections;
+			IssueList m_issues;
 			mutable int m_fileCount;
 			int m_scannedFileCount;
 			int m_failedScanCount;
-			unsigned long int m_scannedDataSize;
+			unsigned long m_scannedDataSize;
 			struct cl_engine * m_scanEngine;
 			bool m_abortFlag;
 	};
