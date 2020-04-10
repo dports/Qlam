@@ -30,10 +30,9 @@
 
 using namespace Qlam;
 
-/* time in ms between final lock on scan engine being released
- * the engine resources being freed (unless another lock is acquired).
- * this ought to stay in the region of minutes or more unless resources
- * are very scarce on the target platform */
+// time in ms between final lock on scan engine being released and the engine resources being freed
+// (unless another lock is acquired). this ought to stay in the region of minutes or more unless
+// resources are very scarce on the target platform */
 #define QLAM_APPLICATION_SCAN_ENGINE_DISPOSE_TIMEOUT 300000 /* 5 mins */
 
 Application * Application::s_instance = nullptr;

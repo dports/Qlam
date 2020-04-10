@@ -6,16 +6,16 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>514</width>
-    <height>354</height>
+    <width>650</width>
+    <height>802</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,2">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,0,0">
    <item>
-    <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0">
+    <layout class="QGridLayout" name="mainLayout" rowstretch="0,0,0">
      <item row="0" column="0">
       <widget class="QLabel" name="databasePathLabel">
        <property name="text">
@@ -24,9 +24,13 @@
       </widget>
      </item>
      <item row="0" column="1">
-      <layout class="QHBoxLayout" name="horizontalLayout">
+      <layout class="QHBoxLayout" name="databasePathLayout">
        <item>
-        <widget class="QLineEdit" name="databasePath"/>
+        <widget class="QLineEdit" name="databasePath">
+         <property name="placeholderText">
+          <string>Using system database.</string>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QToolButton" name="chooseDatabasePathButton">
@@ -35,8 +39,7 @@
          </property>
          <property name="icon">
           <iconset theme="folder">
-           <normaloff/>
-          </iconset>
+           <normaloff>.</normaloff>.</iconset>
          </property>
         </widget>
        </item>
@@ -76,7 +79,7 @@
       </widget>
      </item>
      <item row="2" column="1">
-      <layout class="QGridLayout" name="gridLayout">
+      <layout class="QGridLayout" name="updateServerLayout">
        <item row="0" column="0">
         <widget class="QRadioButton" name="officialMirrorButton">
          <property name="text">
@@ -108,6 +111,131 @@
     </layout>
    </item>
    <item>
+    <widget class="QLabel" name="label">
+     <property name="font">
+      <font>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Scan options</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QToolBox" name="toolBox">
+     <property name="currentIndex">
+      <number>1</number>
+     </property>
+     <widget class="QWidget" name="heuristics">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>854</width>
+        <height>424</height>
+       </rect>
+      </property>
+      <attribute name="label">
+       <string>Heuristics</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QCheckBox" name="sslMismatch">
+         <property name="text">
+          <string>SSL mismatch</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="partitionTableSize">
+         <property name="text">
+          <string>Alert when a partition table appears to have an incorrect size</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="brokenFiles">
+         <property name="text">
+          <string>Identify broken executable files</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="socialSecurityNumbers">
+         <property name="text">
+          <string>Alert when file content appears to contain social security number(s)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="creditCardNumbers">
+         <property name="text">
+          <string>Alert when file content appears to contain credit card number(s)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="personalData">
+         <property name="text">
+          <string>Alert when potentially sensitive information (e.g. personal details)  is identified.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="docPassword">
+         <property name="text">
+          <string>Alert when an office document cannot be scanned because it is password protected</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="archivePassword">
+         <property name="text">
+          <string>Alert when an archive (.zip file, etc.) cannot be scanned because it is password protected</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="exceedsMax">
+         <property name="text">
+          <string>Alert when scanned object is too large</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="macros">
+         <property name="text">
+          <string>Alert if Office (and other) files contain macros</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="cloakedUrls">
+         <property name="text">
+          <string>Identify obfuscated URLs in emails</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="deepScan">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>638</width>
+        <height>83</height>
+       </rect>
+      </property>
+      <attribute name="label">
+       <string>Deep scans</string>
+      </attribute>
+     </widget>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -124,7 +252,6 @@
  </widget>
  <resources/>
  <connections/>
- <slots/>
  <buttongroups>
   <buttongroup name="updateServerType"/>
  </buttongroups>

@@ -1,7 +1,7 @@
-/** \file databaseinfo.cpp
+/**
+ * @file databaseinfo.cpp
  *
- * \todo
- * - implement read() for windows - don't rely on sigtool program
+ * TODO implement read() for windows - don't rely on sigtool program
  */
 #include "databaseinfo.h"
 

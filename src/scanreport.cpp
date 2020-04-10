@@ -12,6 +12,6 @@ void ScanReport::removeInfectedFile(const QString & path) {
 }
 
 
-void ScanReport::removeInfectedFile(const InfectedFile & infection) {
+void ScanReport::removeInfectedFile(const FileWithIssues & infection) {
     Q_UNUSED(infection);
 }

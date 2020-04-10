@@ -1,56 +1,70 @@
-#include "elidinglabel.h"
-
 #include <QtGui/QResizeEvent>
-
 #include <QtCore/QDebug>
+#include "elidinglabel.h"
 
 using namespace Qlam;
 
 ElidingLabel::ElidingLabel(QWidget *parent, Qt::WindowFlags flags)
 : QLabel(parent, flags),
+  m_suppressPaintEvents(false),
   m_elideMode(Qt::ElideMiddle) {
 	setTextFormat(Qt::PlainText);
 	setWordWrap(false);
+	installEventFilter(this);
+	setSizePolicy({QSizePolicy::Minimum, QSizePolicy::Preferred});
 }
-
 
 ElidingLabel::ElidingLabel(const QString & text, QWidget * parent, Qt::WindowFlags flags)
-: QLabel(parent, flags),
-  m_elideMode(Qt::ElideMiddle) {
-	setTextFormat(Qt::PlainText);
-	setWordWrap(false);
+: ElidingLabel(parent, flags) {
 	setText(text);
 }
-
-
-void ElidingLabel::setText( const QString & text ) {
-	if(text != m_text) {
-		m_text = text;
-		doElide();
-		update();
-	}
-}
-
 
 void ElidingLabel::setElideMode(const Qt::TextElideMode & mode) {
 	if(mode != m_elideMode) {
 		m_elideMode = mode;
-		doElide();
 		update();
 	}
 }
 
+void ElidingLabel::resizeEvent(QResizeEvent * event) {
+    QLabel::resizeEvent(event);
+    QString currentText = text();
 
-void ElidingLabel::resizeEvent( QResizeEvent * ev ) {
-	if(ev->oldSize().width() != width()) {
-		doElide();
-	}
-
-	QLabel::resizeEvent(ev);
+    if (!currentText.isEmpty()) {
+        QString minimalText = text().at(0) + QStringLiteral("…");
+        setMinimumWidth(fontMetrics().horizontalAdvance(minimalText));
+    }
 }
 
+void ElidingLabel::paintEvent(QPaintEvent * event) {
+    if (Qt::ElideNone == elideMode()) {
+        QLabel::paintEvent(event);
+        return;
+    }
 
-void ElidingLabel::doElide() {
-	/* TODO do we need to accommodate frame thickness? */
-	QLabel::setText(fontMetrics().elidedText(m_text, m_elideMode, width() - margin() - 1));
+    QString originalText = text();
+    QString elidedText = fontMetrics().elidedText(originalText, elideMode(), event->rect().width() - margin() - 1);
+
+    // filter out any paint events while we're monkeying with the text
+    disablePaintEvents();
+    QLabel::setText(elidedText);
+    QLabel::paintEvent(event);
+    QLabel::setText(originalText);
+    enablePaintEvents();
+}
+
+bool ElidingLabel::eventFilter(QObject * object, QEvent * event) {
+    if (object != this || event->type() != QEvent::Paint) {
+        return QLabel::eventFilter(object, event);
+    }
+
+    return m_suppressPaintEvents;
+}
+
+void ElidingLabel::enablePaintEvents() {
+    this->m_suppressPaintEvents = false;
+}
+
+void ElidingLabel::disablePaintEvents() {
+    this->m_suppressPaintEvents = true;
 }

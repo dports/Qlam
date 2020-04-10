@@ -1,24 +1,24 @@
-#ifndef QLAM_INFECTEDFILE_H
-#define QLAM_INFECTEDFILE_H
+#ifndef QLAM_FILEWITHISSUES_H
+#define QLAM_FILEWITHISSUES_H
 
 #include <QtCore/QString>
 #include <QtCore/QStringList>
 
 namespace Qlam {
-	class InfectedFile {
+	class FileWithIssues {
 		public:
-			explicit InfectedFile(const QString & = {});
+			explicit FileWithIssues(const QString & = {});
 
 			inline QString path() const {
 				return m_path;
 			}
 
-			inline const QStringList & viruses() const {
-				return m_viruses;
+			inline const QStringList & issues() const {
+				return m_issues;
 			}
 
-			inline void addVirus(const QString & name) {
-				m_viruses.append(name);
+			inline void addIssue(const QString & name) {
+				m_issues.append(name);
 			}
 
 		private:
@@ -27,8 +27,8 @@ namespace Qlam {
 			}
 
 			QString m_path;
-			QStringList m_viruses;
+			QStringList m_issues;
 	};
 }
 
-#endif // QLAM_INFECTEDFILE_H
+#endif // QLAM_FILEWITHISSUES_H

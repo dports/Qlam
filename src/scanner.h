@@ -26,6 +26,8 @@ namespace Qlam {
 		public:
 			using IssueList = QList<FileWithIssues>;
 
+            static const int FileCountNotCalculated;
+
 			explicit Scanner( const QString & = QString(), QObject * = nullptr );
 			explicit Scanner( const QStringList &, QObject * = nullptr );
 			~Scanner() override;
@@ -75,7 +77,7 @@ namespace Qlam {
 			}
 
 			void reset();
-			std::future<int> fileCount() const;
+			int fileCount() const;
 
 			int infectedFileCount() const {
 				return m_issues.count();
@@ -97,6 +99,9 @@ namespace Qlam {
 		Q_SIGNALS:
 			/* emitted when a scan starts */
 			void scanStarted();
+
+			/* emitted when the async task to count the files to be scanned has completed */
+			void fileCountComplete(int);
 
 			/* emitted when a file is scanned */
 			void fileScanned( const QString & path );
@@ -145,15 +150,14 @@ namespace Qlam {
 			void run() override;
 
 		private:
-			static int countFiles(const QFileInfo &);
+	        void startFileCounter();
+			int countFiles(const QFileInfo &);
 			void scanEntity(const QFileInfo &);
 			void scanFile(const QFileInfo &);
 
-			static const int FileCountNotCalculated;
-
 			QStringList m_scanPaths;
 			TreeItem m_scannedDirs;
-			static TreeItem s_countedDirs;
+			TreeItem m_countedDirs;
 
 			IssueList m_issues;
 			mutable int m_fileCount;
@@ -162,6 +166,7 @@ namespace Qlam {
 			unsigned long m_scannedDataSize;
 			struct cl_engine * m_scanEngine;
 			bool m_abortFlag;
+			std::future<int> m_counter;
 	};
 }
 

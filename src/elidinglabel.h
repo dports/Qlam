@@ -17,28 +17,21 @@ namespace Qlam {
 			explicit ElidingLabel( QWidget * parent = nullptr, Qt::WindowFlags flags = {} );
 			explicit ElidingLabel( const QString & text, QWidget * parent = nullptr, Qt::WindowFlags flags = {} );
 
-			inline QString text() const {
-				return m_text;
-			}
-
 			void setElideMode( const Qt::TextElideMode & mode );
 
-			inline Qt::TextElideMode elideMode() const {
+			[[nodiscard]] inline Qt::TextElideMode elideMode() const {
 				return m_elideMode;
 			}
 
-		Q_SIGNALS:
-
-		public Q_SLOTS:
-			void setText(const QString &);
-
 		protected:
+            void disablePaintEvents();
+			void enablePaintEvents();
 			void resizeEvent(QResizeEvent *) override;
+			void paintEvent(QPaintEvent *) override;
+			bool eventFilter(QObject *, QEvent *) override;
 
 		private:
-			void doElide();
-
-			QString m_text;
+            bool m_suppressPaintEvents;
 			Qt::TextElideMode m_elideMode;
 	};
 }

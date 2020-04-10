@@ -214,7 +214,6 @@ void MainWindow::slotScanProfileAdded(int idx) {
 
 
 void MainWindow::slotScanProfileChosen(int idx) {
-	/* TODO validate index */
 	m_scanWidget->setScanProfile(Application::instance()->scanProfile(idx));
 	m_scanStack->setCurrentWidget(m_scanWidget);
 }
@@ -246,8 +245,8 @@ void MainWindow::slotSaveProfileButtonClicked() {
 void MainWindow::slotScanPathsChanged() {
 	int idx = m_scanProfileChooser->currentProfileIndex();
 
-	/* TODO MainWindow should not need to know that index 0 is the custom
-	 * scan profile */
+	// TODO MainWindow should not need to know that index 0 is the custom
+	//  scan profile
 	if(0 == idx) {
 		ScanProfile * profile = Application::instance()->scanProfiles().at(idx);
 		profile->clearPaths();

@@ -5,6 +5,8 @@
 #include <QtCore/QString>
 #include <QtCore/QUrl>
 
+class QSettings;
+
 namespace Qlam {
 	class Settings:
 	public QObject {
@@ -110,6 +112,8 @@ namespace Qlam {
 			void customUpdateServerChanged(const QUrl &);
 
 		private:
+			void fillSettings(QSettings &) const;
+			void readSettings(const QSettings &);
 			static QString updateServerTypeToString(const UpdateServerType &);
 			static UpdateServerType stringToUpdateServerType(const QString &);
 

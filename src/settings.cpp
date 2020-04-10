@@ -3,7 +3,7 @@
 #include <QtCore/QDebug>
 #include <QtCore/QSettings>
 #include <QtCore/QUrl>
-
+#include <QtGlobal>
 #include "application.h"
 
 using namespace Qlam;
@@ -30,7 +30,7 @@ Settings::Settings(QString filePath, QObject * parent)
 
 bool Settings::setUpdateMirror( const QString & mirror ) {
 	if(mirror != m_updateMirror) {
-		/* TODO validate mirror */
+		// TODO validate mirror
 		m_updateMirror = mirror;
 		m_modified = true;
 		Q_EMIT updateMirrorChanged(mirror);
@@ -47,52 +47,46 @@ QUrl Settings::updateServer() const {
 	return QUrl(QString("http://db.%1.clamav.net").arg(updateMirror()));
 }
 
+void Settings::fillSettings(QSettings & settings) const {
+	settings.setValue("database.path", databasePath());
+	settings.setValue("updateserver.type", updateServerTypeToString(updateServerType()));
+	settings.setValue("updateserver.mirror", updateMirror());
+	settings.setValue("updateserver.customserver.url", customUpdateServer().toString());
+}
+
+void Settings::readSettings(const QSettings & settings) {
+	setDatabasePath(settings.value("database.path", QString()).toString());
+	setUpdateServerType(stringToUpdateServerType(settings.value("updateserver.type", "OfficialMirror").toString()));
+	setUpdateMirror(settings.value("updateserver.mirror", "").toString());
+	setCustomUpdateServer(settings.value("updateserver.customserver.url", "").toString());
+}
 
 void Settings::load() {
-	QSettings * s = nullptr;
-
 	if(m_filePath.isEmpty()) {
 		qDebug() << "loading settings from default path";
-		s = new QSettings(QSettings::IniFormat, QSettings::UserScope, qlamApp->organizationName(), qlamApp->applicationName() + ".appconfig");
+		readSettings(QSettings(QSettings::IniFormat, QSettings::UserScope, qlamApp->organizationName(), qlamApp->applicationName() + ".appconfig"));
 	}
 	else {
 		qDebug() << "loading settings from" << m_filePath;
-		s = new QSettings(m_filePath, QSettings::IniFormat);
+		readSettings(QSettings(m_filePath, QSettings::IniFormat));
 	}
 
-	setDatabasePath(s->value("database.path", QString()).toString());
-	setUpdateServerType(stringToUpdateServerType(s->value("updateserver.type", "OfficialMirror").toString()));
-	setUpdateMirror(s->value("updateserver.mirror", "").toString());
-	setCustomUpdateServer(s->value("updateserver.customserver.url", "").toString());
 	m_modified = false;
 	Q_EMIT changed();
-qDebug() << "loaded settings from" << s->fileName();
-
-	delete s;
 }
-
 
 void Settings::saveCopyAs( const QString & path ) const {
-	QSettings * s = nullptr;
-
 	if(m_filePath.isEmpty()) {
-		qDebug() << "saving to default path";
-		s = new QSettings(QSettings::IniFormat, QSettings::UserScope, qlamApp->organizationName(), qlamApp->applicationName() + ".appconfig");
+		QSettings settings(QSettings::IniFormat, QSettings::UserScope, qlamApp->organizationName(), qlamApp->applicationName() + ".appconfig");
+		fillSettings(settings);		
+		qDebug() << "Saved settings to file" << settings.fileName();
 	}
 	else {
-		qDebug() << "saving to" << path;
-		s = new QSettings(path, QSettings::IniFormat);
+		QSettings settings(path, QSettings::IniFormat);
+		fillSettings(settings);
+		qDebug() << "Saved settings to file" << settings.fileName();
 	}
-
-qDebug() << "saved settings to" << s->fileName();
-	s->setValue("database.path", databasePath());
-	s->setValue("updateserver.type", updateServerTypeToString(updateServerType()));
-	s->setValue("updateserver.mirror", updateMirror());
-	s->setValue("updateserver.customserver.url", customUpdateServer().toString());
-
-	delete s;
 }
-
 
 QString Settings::updateServerTypeToString( const Settings::UpdateServerType & type ) {
 	switch(type) {
@@ -105,7 +99,6 @@ QString Settings::updateServerTypeToString( const Settings::UpdateServerType & t
 
 	return QString();
 }
-
 
 Settings::UpdateServerType Settings::stringToUpdateServerType( const QString & type ) {
 	if("OfficialMirror" == type) {

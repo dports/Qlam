@@ -2,7 +2,7 @@
 
 using namespace Qlam;
 
-InfectedFile::InfectedFile( const QString & path )
+FileWithIssues::FileWithIssues( const QString & path )
 : m_path() {
 	setPath(path);
 }

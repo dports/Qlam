@@ -116,24 +116,24 @@ namespace Qlam {
 				return m_scannedPaths.count();
 			}
 
-            inline const QList<InfectedFile> & infectedFiles() {
+            inline const QList<FileWithIssues> & infectedFiles() {
 				return m_infections;
 			}
 
-			inline QList<InfectedFile> infectedFiles() const {
+			inline QList<FileWithIssues> infectedFiles() const {
 				return m_infections;
 			}
 
 			inline void addInfectedFile( const QString & path ) {
-				m_infections.append(InfectedFile(path));
+				m_infections.append(FileWithIssues(path));
 			}
 
-			inline void addInfectedFile( const InfectedFile & infection ) {
+			inline void addInfectedFile( const FileWithIssues & infection ) {
 				m_infections.append(infection);
 			}
 
 			void removeInfectedFile( const QString & path );
-			void removeInfectedFile( const InfectedFile & infection );
+			void removeInfectedFile( const FileWithIssues & infection );
 
 			inline void removeInfectedFile( int i ) {
                 Q_ASSERT(0 <= i && i < m_infections.count());
@@ -153,7 +153,7 @@ namespace Qlam {
 			QDateTime m_startTime, m_endTime;
 			QString m_title;
 			QStringList m_scannedPaths;	/* not everything, just those passed to the scanner */
-			QList<InfectedFile> m_infections;
+			QList<FileWithIssues> m_infections;
 	};
 
 } // namespace Qlam

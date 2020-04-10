@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>423</height>
+    <width>846</width>
+    <height>580</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -26,7 +26,7 @@
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <layout class="QVBoxLayout" name="verticalLayout">
        <property name="spacing">
         <number>0</number>
@@ -69,8 +69,7 @@
            </property>
            <property name="icon">
             <iconset theme="list-remove">
-             <normaloff/>
-            </iconset>
+             <normaloff>.</normaloff>.</iconset>
            </property>
           </widget>
          </item>
@@ -84,8 +83,7 @@
            </property>
            <property name="icon">
             <iconset theme="text-plain">
-             <normaloff/>
-            </iconset>
+             <normaloff>.</normaloff>.</iconset>
            </property>
           </widget>
          </item>
@@ -99,8 +97,7 @@
            </property>
            <property name="icon">
             <iconset theme="folder">
-             <normaloff/>
-            </iconset>
+             <normaloff>.</normaloff>.</iconset>
            </property>
           </widget>
          </item>
@@ -114,8 +111,7 @@
            </property>
            <property name="icon">
             <iconset theme="document-save">
-             <normaloff/>
-            </iconset>
+             <normaloff>.</normaloff>.</iconset>
            </property>
           </widget>
          </item>
@@ -123,10 +119,29 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QLabel" name="timer">
+           <property name="minimumSize">
+            <size>
+             <width>75</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>--</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::PlainText</enum>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
          <item>
           <widget class="QProgressBar" name="scanProgress"/>
          </item>
@@ -140,15 +155,14 @@
            </property>
            <property name="icon">
             <iconset theme="dialog-cancel">
-             <normaloff/>
-            </iconset>
+             <normaloff>.</normaloff>.</iconset>
            </property>
           </widget>
          </item>
         </layout>
        </item>
        <item>
-        <widget class="QLabel" name="scanStatus">
+        <widget class="Qlam::ElidingLabel" name="scanStatus">
          <property name="text">
           <string/>
          </property>
@@ -170,7 +184,7 @@
        <item>
         <widget class="QTreeWidget" name="issuesList">
          <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Infections found during the last scan.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Issues found during the last scan.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="textElideMode">
           <enum>Qt::ElideMiddle</enum>
@@ -193,11 +207,11 @@
          <attribute name="headerVisible">
           <bool>false</bool>
          </attribute>
-         <attribute name="headerDefaultSectionSize">
-          <number>200</number>
-         </attribute>
          <attribute name="headerMinimumSectionSize">
           <number>50</number>
+         </attribute>
+         <attribute name="headerDefaultSectionSize">
+          <number>200</number>
          </attribute>
          <attribute name="headerStretchLastSection">
           <bool>true</bool>
@@ -239,8 +253,7 @@
            </property>
            <property name="icon">
             <iconset theme="system-search">
-             <normaloff/>
-            </iconset>
+             <normaloff>.</normaloff>.</iconset>
            </property>
            <property name="autoDefault">
             <bool>true</bool>
@@ -258,6 +271,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Qlam::ElidingLabel</class>
+   <extends>QLabel</extends>
+   <header>src/elidinglabel.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

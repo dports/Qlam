@@ -21,11 +21,12 @@
 #include <QtGui/QDragEnterEvent>
 #include <QtCore/QMimeData>
 #include <QtCore/QUrl>
+#include <cmath>
 
 #include "qlam.h"
 #include "scanner.h"
 #include "scanprofile.h"
-#include "ScannerHeuristicMatch.h"
+#include "scannerheuristicmatch.h"
 
 using namespace Qlam;
 
@@ -34,7 +35,7 @@ const int ScanWidget::IndeterminateProgress = -1;
 ScanWidget::ScanWidget(QWidget *parent)
 	: QWidget(parent),
       m_ui(std::make_unique<Ui::ScanWidget>()),
-      m_scanner(new Scanner(QString(), this)),
+      m_scanner(new Scanner(QStringLiteral(), this)),
       m_scanDuration(0),
       m_scanDurationTimer(0) {
 	m_ui->setupUi(this);
@@ -73,22 +74,10 @@ ScanWidget::ScanWidget(QWidget *parent)
 	connect(m_scanner, &Scanner::scanFinished, this, &ScanWidget::scanFinished, Qt::BlockingQueuedConnection);
 	connect(m_scanner, &Scanner::fileScanned, this, &ScanWidget::setScanStatus, Qt::BlockingQueuedConnection);
 	connect(m_scanner, &Scanner::fileScanned, this, &ScanWidget::slotScannerScannedFile, Qt::BlockingQueuedConnection);
-	connect(m_scanner, qOverload<const QString &, const QString &>(&Scanner::fileInfected), this, &ScanWidget::addInfection, Qt::BlockingQueuedConnection);
+	connect(m_scanner, qOverload<const QString &, const QString &>(&Scanner::fileInfected), this, &ScanWidget::addIssue, Qt::BlockingQueuedConnection);
 	connect(m_scanner, &Scanner::fileMatchedHeuristic, this, &ScanWidget::addMatchedHeuristic, Qt::BlockingQueuedConnection);
 	connect(m_scanner, &Scanner::fileScanFailed, this, &ScanWidget::addFailedFileScan, Qt::BlockingQueuedConnection);
 }
-
-
-bool ScanWidget::setScanPath(int idx, const QString & path ) {
-	if(0 > idx || scanPathCount() <= idx) {
-		return false;
-	}
-
-	m_ui->scanPaths->item(idx)->setText(path);
-	Q_EMIT scanPathsChanged();
-	return true;
-}
-
 
 QStringList ScanWidget::scanPaths() const {
 	QStringList paths;
@@ -100,23 +89,19 @@ QStringList ScanWidget::scanPaths() const {
 	return paths;
 }
 
-
 void ScanWidget::clearScanPaths() {
 	m_ui->scanPaths->clear();
 	Q_EMIT scanPathsChanged();
 }
-
 
 void ScanWidget::addScanPath( const QString & path ) {
 	m_ui->scanPaths->addItem(path);
 	Q_EMIT scanPathsChanged();
 }
 
-
 int ScanWidget::scanPathCount() const {
 	return m_ui->scanPaths->count();
 }
-
 
 void ScanWidget::setScanProfile( const ScanProfile & profile ) {
 	bool block = blockSignals(true);
@@ -132,7 +117,6 @@ void ScanWidget::setScanProfile( const ScanProfile & profile ) {
 	blockSignals(block);
 	Q_EMIT scanPathsChanged();
 }
-
 
 void ScanWidget::dragEnterEvent( QDragEnterEvent * event ) {
 	if(event->mimeData()->hasUrls()) {
@@ -163,10 +147,9 @@ void ScanWidget::dropEvent( QDropEvent * event ) {
 	}
 }
 
-void ScanWidget::timerEvent( QTimerEvent * event ) {
+void ScanWidget::timerEvent(QTimerEvent * event) {
 	if(event->timerId() == m_scanDurationTimer) {
-		++m_scanDuration;
-		/* TODO update display widget */
+	    updateScanDuration();
 	}
 }
 
@@ -226,7 +209,6 @@ void ScanWidget::removeSelectedScanPaths() {
 	}
 }
 
-
 void ScanWidget::doScan() {
 	m_scanner->setScanPaths(scanPaths());
 
@@ -239,6 +221,7 @@ void ScanWidget::doScan() {
 	showScanOutput();
 	setScanProgress(ScanWidget::IndeterminateProgress);
 	setScanStatus(tr("Initialising scan"));
+	m_ui->timer->setText("--");
 	m_scanDuration = 0;
 	m_scanDurationTimer = startTimer(1000);
 
@@ -254,7 +237,6 @@ void ScanWidget::doScan() {
 	}
 }
 
-
 void ScanWidget::abortScan() {
 	if(!m_scanner->isRunning()) {
 		qDebug() << "scanner is not running";
@@ -264,20 +246,17 @@ void ScanWidget::abortScan() {
 	m_scanner->abort();
 }
 
-
 void ScanWidget::setScanOutputVisible( bool vis ) {
-	m_ui->scanProgress->setEnabled(vis);
-	m_ui->abortButton->setEnabled(vis);
-	m_ui->scanStatus->setEnabled(vis);
-	m_ui->issuesListLabel->setEnabled(vis);
-	m_ui->issuesList->setEnabled(vis);
+    m_ui->scanProgress->setEnabled(vis);
+    m_ui->abortButton->setEnabled(vis);
+    m_ui->scanStatus->setEnabled(vis);
+    m_ui->issuesListLabel->setEnabled(vis);
+    m_ui->issuesList->setEnabled(vis);
 }
-
 
 void ScanWidget::setScanStatus( const QString & text ) {
 	m_ui->scanStatus->setText(text);
 }
-
 
 void ScanWidget::clearScanOutput() {
 	m_ui->scanProgress->setValue(0);
@@ -285,7 +264,6 @@ void ScanWidget::clearScanOutput() {
 	m_ui->issuesList->clear();
 	m_ui->issuesList->setHeaderHidden(true);
 }
-
 
 void ScanWidget::setScanProgress( int pc ) {
 	if(IndeterminateProgress == pc) {
@@ -297,7 +275,7 @@ void ScanWidget::setScanProgress( int pc ) {
 	}
 }
 
-void ScanWidget::addInfection(const QString & path, const QString & virus ) {
+void ScanWidget::addIssue(const QString & path, const QString & virus ) {
     m_ui->issuesList->setHeaderHidden(false);
     m_ui->issuesList->addTopLevelItem(new QTreeWidgetItem(QStringList() << path << tr("Infection: %1").arg(virus)));
     m_ui->issuesList->resizeColumnToContents(0);
@@ -390,61 +368,56 @@ void ScanWidget::addFailedFileScan( const QString & path ) {
 	m_ui->issuesList->resizeColumnToContents(1);
 }
 
-
 void ScanWidget::slotScannerScannedFile() {
 	Q_ASSERT(m_scanner != nullptr);
-	int pc = int(100 * (double(m_scanner->scannedFileCount()) / double(m_scanner->fileCount())));
+	int fileCount = m_scanner->fileCount();
+
+	if (fileCount == Scanner::FileCountNotCalculated) {
+	    setScanProgress(ScanWidget::IndeterminateProgress);
+	    return;
+	}
+
+	int pc = int(100 * (static_cast<double>(m_scanner->scannedFileCount()) / static_cast<double>(fileCount)));
 	setScanProgress(pc);
 }
-
 
 void ScanWidget::slotScanSucceeded() {
 	Q_ASSERT_X(m_scanner, "ScanWidget::slotScanSucceeded()", "method called not in response to signal from ClamScan object");
 	long long kb = m_scanner->dataScanned();
+    QLocale currentLocale;
 	QString sizeDisplay;
 
 	if(kb < 5120) {
 		/* less than 5MB, express in KB */
-		sizeDisplay = tr("%1 Kb").arg(kb);
+		sizeDisplay = tr("%1 Kb").arg(currentLocale.toString(kb));
 	}
 	else if(kb < 1048576 * 5) {
 		/* less than 5GB, express in MB */
-		sizeDisplay = tr("%1 Mb").arg(double(kb) / 1024, 0, 'f', 2);
+		sizeDisplay = tr("%1 Mb").arg(currentLocale.toString(static_cast<double>(kb) / 1024, 'f', 2));
 	}
 	else {
 		/* express in GB */
-		sizeDisplay = tr("%1 Gb").arg(double(kb) / 1048576, 0, 'f', 2);
+		sizeDisplay = tr("%1 Gb").arg(currentLocale.toString(static_cast<double>(kb) / 1048576, 'f', 2));
 	}
 
-	QString timeDisplay;
-
-	if(m_scanDuration < 60) {
-		timeDisplay = tr("%1s").arg(m_scanDuration);
-	}
-	else if(m_scanDuration < 3600) {
-		timeDisplay = tr("%1m %2s").arg(m_scanDuration / 60).arg(m_scanDuration % 60);
-	}
-	else {
-		timeDisplay = tr("%1h %2m %3s").arg(m_scanDuration / 3600).arg(m_scanDuration / 60).arg(m_scanDuration % 60);
-	}
-
-	setScanStatus(tr("Scan finished in %4 (%1 infections found in %2 of data in %3 files)").arg(m_scanner->infectedFileCount()).arg(sizeDisplay).arg(m_scanner->scannedFileCount()).arg(timeDisplay));
-	setScanProgress(100);
+	setScanStatus(tr("Scan finished in %4 (%1 issues found in %2 of data in %3 files)")
+        .arg(currentLocale.toString(m_scanner->infectedFileCount()))
+        .arg(sizeDisplay)
+        .arg(currentLocale.toString(m_scanner->scannedFileCount()))
+        .arg(currentDurationString()));
+    setScanProgress(100);
 }
-
 
 void ScanWidget::slotScanFailed() {
 	setScanStatus(tr("Scan failed"));
-	/* TODO add "failed" message to issues ? */
+	addIssue("", tr("Scan failed."));
 	setScanProgress(0);
 }
-
 
 void ScanWidget::slotScanAborted() {
 	setScanStatus(tr("Scan aborted"));
 	setScanProgress(0);
 }
-
 
 void ScanWidget::slotScanFinished() {
 	m_ui->scanButton->setEnabled(true);
@@ -453,9 +426,43 @@ void ScanWidget::slotScanFinished() {
 	m_scanDurationTimer = 0;
 }
 
-
 void ScanWidget::slotScanPathsSelectionChanged() {
 	m_ui->removeScanPath->setEnabled(0 < m_ui->scanPaths->selectedItems().count());
+}
+
+void ScanWidget::updateScanDuration() {
+    ++m_scanDuration;
+    m_ui->timer->setText(currentDurationString());
+}
+
+QString ScanWidget::currentDurationString() const {
+    static constexpr const int secondsPerHour = 60 * 60;
+    static constexpr const int secondsPerMinute = 60;
+
+    QString durationText;
+    QLocale currentLocale;
+
+    if (secondsPerHour <= m_scanDuration) {
+        int seconds = m_scanDuration;
+        int hours = static_cast<int>(floor(static_cast<double>(seconds) / secondsPerHour));
+        seconds %= secondsPerHour;
+        int minutes = static_cast<int>(floor(static_cast<double>(seconds) / secondsPerMinute));
+        seconds %= secondsPerMinute;
+
+        if (1 < hours || 10 < minutes) {
+            durationText = QStringLiteral("%1h %2m").arg(currentLocale.toString(hours)).arg(minutes);
+        } else {
+            durationText = QStringLiteral("%1h %2m %3s").arg(currentLocale.toString(hours)).arg(minutes).arg(seconds);
+        }
+    } else if (secondsPerMinute <= m_scanDuration) {
+        int seconds = m_scanDuration;
+        int minutes = static_cast<int>(floor(static_cast<double>(seconds) / secondsPerMinute));
+        seconds %= secondsPerMinute;
+        durationText = QStringLiteral("%1m %2s").arg(minutes).arg(seconds);
+    } else {
+        durationText = QStringLiteral("%1s").arg(m_scanDuration);
+    }
+    return durationText;
 }
 
 ScanWidget::~ScanWidget() = default;

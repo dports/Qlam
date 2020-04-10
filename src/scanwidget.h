@@ -60,6 +60,7 @@ namespace Qlam {
 			void scanFinished();
 
 		protected:
+            void updateScanDuration();
 			void dragEnterEvent(QDragEnterEvent *) override;
 			void dropEvent(QDropEvent *) override;
 			void timerEvent(QTimerEvent *) override;
@@ -84,7 +85,7 @@ namespace Qlam {
 			void setScanStatus(const QString &);
 			void clearScanOutput();
 			void setScanProgress(int);
-			void addInfection(const QString &, const QString &);
+			void addIssue(const QString &path, const QString &virus);
 			void addMatchedHeuristic(const QString &, ScannerHeuristicMatch);
 
 		private Q_SLOTS:
@@ -101,7 +102,9 @@ namespace Qlam {
 			Scanner * m_scanner;
 			int m_scanDuration;
 			int m_scanDurationTimer;
-	};
+
+        QString currentDurationString() const;
+    };
 }
 
 #endif // QLAM_SCANSETTINGSWIDGET_H
