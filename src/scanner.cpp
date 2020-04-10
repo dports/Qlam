@@ -43,17 +43,17 @@ static constexpr uint32_t DefaultParseScanOptions =
     ;
 
 static constexpr uint32_t DefaultHeuristicScanOptions =
-    static_cast<uint32_t>(CL_SCAN_HEURISTIC_BROKEN) |                     // alert on broken PE and broken ELF files 
-    static_cast<uint32_t>(CL_SCAN_HEURISTIC_EXCEEDS_MAX) |                // alert when files exceed scan limits (filesize, max scansize, or max recursion depth) 
-    static_cast<uint32_t>(CL_SCAN_HEURISTIC_PHISHING_SSL_MISMATCH) |      // alert on SSL mismatches 
-    static_cast<uint32_t>(CL_SCAN_HEURISTIC_PHISHING_CLOAK) |             // alert on cloaked URLs in emails 
-    static_cast<uint32_t>(CL_SCAN_HEURISTIC_MACROS) |                     // alert on OLE2 files containing macros 
-    static_cast<uint32_t>(CL_SCAN_HEURISTIC_ENCRYPTED_ARCHIVE) |          // alert if archive is encrypted (rar, zip, etc) 
-    static_cast<uint32_t>(CL_SCAN_HEURISTIC_ENCRYPTED_DOC) |              // alert if a document is encrypted (pdf, docx, etc) 
-    static_cast<uint32_t>(CL_SCAN_HEURISTIC_PARTITION_INTXN)              // alert if partition table size doesn't make sense 
-//    static_cast<uint32_t>(CL_SCAN_HEURISTIC_STRUCTURED) |               // data loss prevention options, i.e. alert when detecting personal information 
-//    static_cast<uint32_t>(CL_SCAN_HEURISTIC_STRUCTURED_SSN_NORMAL) |    // alert when detecting social security numbers 
-//    static_cast<uint32_t>(CL_SCAN_HEURISTIC_STRUCTURED_SSN_STRIPPED)    // alert when detecting stripped social security numbers 
+    static_cast<uint32_t>(CL_SCAN_HEURISTIC_BROKEN) |                     // alert on broken PE and broken ELF files
+    static_cast<uint32_t>(CL_SCAN_HEURISTIC_EXCEEDS_MAX) |                // alert when files exceed scan limits (filesize, max scansize, or max recursion depth)
+    static_cast<uint32_t>(CL_SCAN_HEURISTIC_PHISHING_SSL_MISMATCH) |      // alert on SSL mismatches
+    static_cast<uint32_t>(CL_SCAN_HEURISTIC_PHISHING_CLOAK) |             // alert on cloaked URLs in emails
+    static_cast<uint32_t>(CL_SCAN_HEURISTIC_MACROS) |                     // alert on OLE2 files containing macros
+    static_cast<uint32_t>(CL_SCAN_HEURISTIC_ENCRYPTED_ARCHIVE) |          // alert if archive is encrypted (rar, zip, etc)
+    static_cast<uint32_t>(CL_SCAN_HEURISTIC_ENCRYPTED_DOC) |              // alert if a document is encrypted (pdf, docx, etc)
+    static_cast<uint32_t>(CL_SCAN_HEURISTIC_PARTITION_INTXN)              // alert if partition table size doesn't make sense
+//    static_cast<uint32_t>(CL_SCAN_HEURISTIC_STRUCTURED) |               // data loss prevention options, i.e. alert when detecting personal information
+//    static_cast<uint32_t>(CL_SCAN_HEURISTIC_STRUCTURED_SSN_NORMAL) |    // alert when detecting social security numbers
+//    static_cast<uint32_t>(CL_SCAN_HEURISTIC_STRUCTURED_SSN_STRIPPED)    // alert when detecting stripped social security numbers
     ;
 
 static constexpr uint32_t DefaultMailScanOptions = static_cast<uint32_t>(CL_SCAN_MAIL_PARTIAL_MESSAGE);
@@ -64,6 +64,7 @@ static const auto HeuristicMatchPrefix = QStringLiteral("Heuristics."); // NOLIN
 static const int ErrPathDoesNotExist = -1;
 static const int ErrUncountablePath = -2;
 
+// TODO use an optional instead
 const int Scanner::FileCountNotCalculated = -1;
 
 Scanner::Scanner( const QString & scanPath, QObject * parent )
