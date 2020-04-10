@@ -1,17 +1,12 @@
+/**
+ * @file scanwidget.cpp
+  *
+  * TODO option to automatically save scan report
+  */
+
 #include "scanwidget.h"
 #include "ui/ui_scanwidget.h"
 
-/** \file scanwidget.cpp
-  *
-  * \todo
-  * - options:
-  *   - close program if scan is clean
-  *   - automatically save scan report
-  * - file count happens in gui thread which blocks on large scans, make it
-  *   happen in a separate thread
-  * - allow adding of scan path by text-entry (i.e. don't require paths to be
-  *   added by file/dir dialogue)
-  */
 #include <QtGlobal>
 #include <QtCore/QDebug>
 #include <QtWidgets/QLineEdit>
@@ -22,11 +17,14 @@
 #include <QtCore/QMimeData>
 #include <QtCore/QUrl>
 #include <cmath>
+#include <QtCore/QCoreApplication>
 
 #include "qlam.h"
+#include "application.h"
 #include "scanner.h"
 #include "scanprofile.h"
 #include "scannerheuristicmatch.h"
+#include "timedactiondialogue.h"
 
 using namespace Qlam;
 
@@ -35,7 +33,7 @@ const int ScanWidget::IndeterminateProgress = -1;
 ScanWidget::ScanWidget(QWidget *parent)
 	: QWidget(parent),
       m_ui(std::make_unique<Ui::ScanWidget>()),
-      m_scanner(new Scanner(QStringLiteral(), this)),
+      m_scanner(QStringLiteral()),
       m_scanDuration(0),
       m_scanDurationTimer(0) {
 	m_ui->setupUi(this);
@@ -67,16 +65,17 @@ ScanWidget::ScanWidget(QWidget *parent)
 	// outside the GUI thread.
 	//
 	// see http://qt-project.org/doc/qt-4.8/qt.html#ConnectionType-enum for details of the different connection types
-	connect(m_scanner, qOverload<>(&Scanner::scanComplete), this, &ScanWidget::slotScanSucceeded, Qt::BlockingQueuedConnection);
-	connect(m_scanner, &Scanner::scanFailed, this, &ScanWidget::slotScanFailed, Qt::BlockingQueuedConnection);
-	connect(m_scanner, &Scanner::scanAborted, this, &ScanWidget::slotScanAborted, Qt::BlockingQueuedConnection);
-	connect(m_scanner, &Scanner::scanFinished, this, &ScanWidget::slotScanFinished, Qt::BlockingQueuedConnection);
-	connect(m_scanner, &Scanner::scanFinished, this, &ScanWidget::scanFinished, Qt::BlockingQueuedConnection);
-	connect(m_scanner, &Scanner::fileScanned, this, &ScanWidget::setScanStatus, Qt::BlockingQueuedConnection);
-	connect(m_scanner, &Scanner::fileScanned, this, &ScanWidget::slotScannerScannedFile, Qt::BlockingQueuedConnection);
-	connect(m_scanner, qOverload<const QString &, const QString &>(&Scanner::fileInfected), this, &ScanWidget::addIssue, Qt::BlockingQueuedConnection);
-	connect(m_scanner, &Scanner::fileMatchedHeuristic, this, &ScanWidget::addMatchedHeuristic, Qt::BlockingQueuedConnection);
-	connect(m_scanner, &Scanner::fileScanFailed, this, &ScanWidget::addFailedFileScan, Qt::BlockingQueuedConnection);
+	connect(&m_scanner, qOverload<>(&Scanner::scanComplete), this, &ScanWidget::slotScanSucceeded, Qt::BlockingQueuedConnection);
+	connect(&m_scanner, &Scanner::scanFailed, this, &ScanWidget::slotScanFailed, Qt::BlockingQueuedConnection);
+	connect(&m_scanner, &Scanner::scanAborted, this, &ScanWidget::slotScanAborted, Qt::BlockingQueuedConnection);
+	connect(&m_scanner, &Scanner::scanFinished, this, &ScanWidget::slotScanFinished, Qt::BlockingQueuedConnection);
+	connect(&m_scanner, &Scanner::scanFinished, this, &ScanWidget::scanFinished, Qt::BlockingQueuedConnection);
+	connect(&m_scanner, &Scanner::pathNotFound, this, &ScanWidget::addPathNotFound, Qt::BlockingQueuedConnection);
+	connect(&m_scanner, &Scanner::fileScanned, this, &ScanWidget::setScanStatus, Qt::BlockingQueuedConnection);
+	connect(&m_scanner, &Scanner::fileScanned, this, &ScanWidget::slotScannerScannedFile, Qt::BlockingQueuedConnection);
+	connect(&m_scanner, &Scanner::fileInfected, this, &ScanWidget::addIssue, Qt::BlockingQueuedConnection);
+	connect(&m_scanner, &Scanner::fileMatchedHeuristic, this, &ScanWidget::addMatchedHeuristic, Qt::BlockingQueuedConnection);
+	connect(&m_scanner, &Scanner::fileScanFailed, this, &ScanWidget::addFailedFileScan, Qt::BlockingQueuedConnection);
 }
 
 QStringList ScanWidget::scanPaths() const {
@@ -210,13 +209,7 @@ void ScanWidget::removeSelectedScanPaths() {
 }
 
 void ScanWidget::doScan() {
-	m_scanner->setScanPaths(scanPaths());
-
-	if(!m_scanner->isValid()) {
-		QMessageBox::critical(this, tr("Error"), tr("The scan cannot proceed. Please ensure that libclamav is installed and that all the scan paths are valid."), tr("OK"));
-		return;
-	}
-
+	m_scanner.setScanPaths(scanPaths());
 	clearScanOutput();
 	showScanOutput();
 	setScanProgress(ScanWidget::IndeterminateProgress);
@@ -225,7 +218,7 @@ void ScanWidget::doScan() {
 	m_scanDuration = 0;
 	m_scanDurationTimer = startTimer(1000);
 
-	if(m_scanner->startScan()) {
+	if(m_scanner.startScan()) {
 		m_ui->scanButton->setEnabled(false);
 		m_ui->abortButton->setEnabled(true);
 		Q_EMIT scanStarted();
@@ -238,12 +231,12 @@ void ScanWidget::doScan() {
 }
 
 void ScanWidget::abortScan() {
-	if(!m_scanner->isRunning()) {
+	if(!m_scanner.isRunning()) {
 		qDebug() << "scanner is not running";
 		return;
 	}
 
-	m_scanner->abort();
+	m_scanner.abort();
 }
 
 void ScanWidget::setScanOutputVisible( bool vis ) {
@@ -278,6 +271,13 @@ void ScanWidget::setScanProgress( int pc ) {
 void ScanWidget::addIssue(const QString & path, const QString & virus ) {
     m_ui->issuesList->setHeaderHidden(false);
     m_ui->issuesList->addTopLevelItem(new QTreeWidgetItem(QStringList() << path << tr("Infection: %1").arg(virus)));
+    m_ui->issuesList->resizeColumnToContents(0);
+    m_ui->issuesList->resizeColumnToContents(1);
+}
+
+void ScanWidget::addPathNotFound(const QString & path) {
+    m_ui->issuesList->setHeaderHidden(false);
+    m_ui->issuesList->addTopLevelItem(new QTreeWidgetItem(QStringList() << path << tr("Not found.")));
     m_ui->issuesList->resizeColumnToContents(0);
     m_ui->issuesList->resizeColumnToContents(1);
 }
@@ -369,21 +369,19 @@ void ScanWidget::addFailedFileScan( const QString & path ) {
 }
 
 void ScanWidget::slotScannerScannedFile() {
-	Q_ASSERT(m_scanner != nullptr);
-	int fileCount = m_scanner->fileCount();
+	std::optional<int> fileCount = m_scanner.fileCount();
 
-	if (fileCount == Scanner::FileCountNotCalculated) {
+	if (!fileCount) {
 	    setScanProgress(ScanWidget::IndeterminateProgress);
 	    return;
 	}
 
-	int pc = int(100 * (static_cast<double>(m_scanner->scannedFileCount()) / static_cast<double>(fileCount)));
+	int pc = int(100 * (static_cast<double>(m_scanner.scannedFileCount()) / static_cast<double>(fileCount.value())));
 	setScanProgress(pc);
 }
 
 void ScanWidget::slotScanSucceeded() {
-	Q_ASSERT_X(m_scanner, "ScanWidget::slotScanSucceeded()", "method called not in response to signal from ClamScan object");
-	long long kb = m_scanner->dataScanned();
+	long long kb = m_scanner.dataScanned();
     QLocale currentLocale;
 	QString sizeDisplay;
 
@@ -401,11 +399,26 @@ void ScanWidget::slotScanSucceeded() {
 	}
 
 	setScanStatus(tr("Scan finished in %4 (%1 issues found in %2 of data in %3 files)")
-        .arg(currentLocale.toString(m_scanner->infectedFileCount()))
+        .arg(currentLocale.toString(m_scanner.issueCount()))
         .arg(sizeDisplay)
-        .arg(currentLocale.toString(m_scanner->scannedFileCount()))
+        .arg(currentLocale.toString(m_scanner.scannedFileCount()))
         .arg(currentDurationString()));
     setScanProgress(100);
+
+    if (m_ui->quitOnClean->isChecked() && 0 == m_scanner.issueCount()) {
+        TimedActionDialogue::Action action = [this]() {
+            if (m_scanner.isRunning()) {
+                connect(&m_scanner, &QThread::finished, Application::instance(), &Application::quit);
+            } else {
+                Application::quit();
+            }
+        };
+
+        auto * dlg = new TimedActionDialogue(tr("Qlam will exit in %1s."), action, this);
+        connect(dlg, &QDialog::finished, dlg, &QDialog::deleteLater);
+        dlg->show();
+        dlg->start();
+    }
 }
 
 void ScanWidget::slotScanFailed() {

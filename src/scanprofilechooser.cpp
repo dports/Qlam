@@ -1,11 +1,7 @@
 #include "scanprofilechooser.h"
 #include "ui/ui_scanprofilechooser.h"
 
-/**
-  * \todo
-  *  - make this a subclass of QButtonGroup if we stick with QCommandLinkButton
-  *    objects
-  */
+// TODO make this a subclass of QButtonGroup if we stick with QCommandLinkButton objects
 
 #include <QtGlobal>
 

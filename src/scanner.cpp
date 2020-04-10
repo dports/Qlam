@@ -64,23 +64,8 @@ static const auto HeuristicMatchPrefix = QStringLiteral("Heuristics."); // NOLIN
 static const int ErrPathDoesNotExist = -1;
 static const int ErrUncountablePath = -2;
 
-// TODO use an optional instead
-const int Scanner::FileCountNotCalculated = -1;
-
 Scanner::Scanner( const QString & scanPath, QObject * parent )
-: QThread(parent),
-  m_scanPaths(),
-  m_scannedDirs(),
-  m_countedDirs(),
-  m_issues(),
-  m_fileCount(FileCountNotCalculated),
-  m_scannedFileCount(0),
-  m_failedScanCount(0),
-  m_scannedDataSize(0),
-  m_scanEngine(nullptr),
-  m_abortFlag(false) {
-	setScanPath(scanPath);
-	connect(Application::instance(), &Application::aboutToQuit, this, &Scanner::abort);
+: Scanner(QStringList() << scanPath, parent) {
 }
 
 Scanner::Scanner( const QStringList & scanPaths, QObject * parent )
@@ -89,7 +74,7 @@ Scanner::Scanner( const QStringList & scanPaths, QObject * parent )
   m_scannedDirs(),
   m_countedDirs(),
   m_issues(),
-  m_fileCount(-1),
+  m_fileCount(),
   m_scannedFileCount(0),
   m_failedScanCount(0),
   m_scannedDataSize(0),
@@ -118,13 +103,11 @@ qDebug() << "forcing release of scan engine";
 }
 
 
-void Scanner::scanEntity( const QFileInfo & path ) {
+void Scanner::scanEntity(const QFileInfo & path) {
 	if(!path.exists()) {
-		qDebug() << "path" << path.filePath() << "does not exist";
+		Q_EMIT pathNotFound(path.filePath());
 		return;
 	}
-
-//	qDebug() << "scanning" << path.filePath();
 
 	if(path.isDir()) {
 		QFileInfo myPath(path);
@@ -134,7 +117,6 @@ void Scanner::scanEntity( const QFileInfo & path ) {
 		}
 
 		if(m_scannedDirs.containsPath(myPath.absoluteFilePath())) {
-qDebug() << "ultimate target of" << path.filePath() << "(" << myPath.absoluteFilePath() << ") already scanned";
 			return;
 		}
 
@@ -213,7 +195,6 @@ void Scanner::scanFile( const QFileInfo & path ) {
             Q_EMIT
             fileMatchedHeuristic(path.filePath(), heuristic);
         } else {
-            Q_EMIT fileInfected(path.filePath());
             Q_EMIT fileInfected(path.filePath(), qstrVirusName);
 		}
 
@@ -267,31 +248,7 @@ qDebug() << "unknown path" << path.filePath() << "(" << path.canonicalFilePath()
     return  ErrUncountablePath;
 }
 
-bool Scanner::isValid() const {
-	// TODO do we want to do this or just emit an invalidPath() signal during scan if a path
-	//  does not exist?
-
-	/* check scan paths are valid */
-	for(const auto & path : scanPaths()) {
-		QFileInfo fi(path);
-
-		if(fi.path().isEmpty() || !fi.exists()) {
-qDebug() << "empty or non-existent scan path" << path;
-			return false;
-		}
-	}
-
-	/* TODO check any other options are valid */
-	return true;
-}
-
-
 bool Scanner::startScan() {
-	if(!isValid()) {
-qDebug() << "scan is not valid";
-		return false;
-	}
-
 	if(isRunning()) {
 qDebug() << "scan is already running";
 		return false;
@@ -300,7 +257,6 @@ qDebug() << "scan is already running";
 	start();
 	return true;
 }
-
 
 void Scanner::run() {
 	reset();
@@ -311,7 +267,6 @@ void Scanner::run() {
 	m_scanEngine = app->acquireEngine();
 
 	if(!m_scanEngine) {
-qDebug() << "failed to acquire scan engine";
 		Q_EMIT scanFailed();
 		Q_EMIT scanFinished();
 		return;
@@ -325,17 +280,14 @@ qDebug() << "failed to acquire scan engine";
 		Q_EMIT scanAborted();
 	}
 	else if(0 < m_failedScanCount) {
-
 		Q_EMIT scanFailed();
 	}
 	else {
-qDebug() << "emitting scanComplete()";
 		Q_EMIT scanComplete();
 		Q_EMIT scanComplete(m_issues.count());
 
-		/* we only emit clean scan signal if scan completed successfully and there
-		 * were no infections found. if scan fails or is aborted, we don't emit
-		 * this signal. */
+		// we only emit clean scan signal if scan completed successfully and there were no infections found.
+		// if scan fails or is aborted, we don't emit this signal.
 		if(0 == m_issues.count()) {
 			Q_EMIT scanClean();
 		}
@@ -375,7 +327,7 @@ void Scanner::reset() {
 }
 
 
-int Scanner::fileCount() const {
+std::optional<int> Scanner::fileCount() const {
 	return m_fileCount;
 }
 
@@ -387,12 +339,12 @@ int Scanner::fileCount() const {
  * try to be sure that any previous count has stopped before calling this.
  */
 void Scanner::startFileCounter() {
-    if (m_counter.valid() && std::future_status::timeout != m_counter.wait_for(std::chrono::seconds(3))) {
-        // TODO log a warning that we're releasing a running asynchronous task
+    if (m_counter.valid() && std::future_status::timeout == m_counter.wait_for(std::chrono::seconds(3))) {
+        qWarning() << "previous asynchronous task to calculate the file count did not exit gracefully.";
     }
 
     m_counter = std::async(std::launch::async, [this] () -> int {
-        m_fileCount = FileCountNotCalculated;
+        m_fileCount.reset();
         int count = 0;
         m_countedDirs.clear();
 
@@ -411,9 +363,7 @@ void Scanner::startFileCounter() {
         // these are only required while the count is in progress,  so we can safely clear here
         m_countedDirs.clear();
 
-        if (m_abortFlag) {
-            m_fileCount = FileCountNotCalculated;
-        } else {
+        if (!m_abortFlag) {
             m_fileCount = count;
             Q_EMIT fileCountComplete(count);
         }

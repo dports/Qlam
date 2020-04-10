@@ -244,6 +244,16 @@
           </spacer>
          </item>
          <item>
+          <widget class="QCheckBox" name="quitOnClean">
+           <property name="toolTip">
+            <string>If no issues are found, quit when the scan finishes.</string>
+           </property>
+           <property name="text">
+            <string>Quit if scan is clean</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="scanButton">
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Start scanning the listed paths.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>

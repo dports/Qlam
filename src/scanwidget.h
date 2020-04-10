@@ -6,6 +6,8 @@
 #include <QtCore/QTimer>
 #include <QtWidgets/QWidget>
 
+#include "scanner.h"
+
 class QDragEnterEvent;
 class QDropEvent;
 class QTimerEvent;
@@ -15,7 +17,6 @@ namespace Ui {
 }
 
 namespace Qlam {
-	class Scanner;
 	class ScanProfile;
 	enum class ScannerHeuristicMatch;
 
@@ -30,7 +31,7 @@ namespace Qlam {
 			explicit ScanWidget(QWidget * = nullptr);
 			~ScanWidget() override;
 
-			inline QString scanPath(int idx = 0) const {
+			[[nodiscard]] inline QString scanPath(int idx = 0) const {
 				if(0 > idx || scanPathCount() <= idx) {
 					return QString();
 				}
@@ -43,12 +44,10 @@ namespace Qlam {
 				addScanPath(path);
 			}
 
-			bool setScanPath(int, const QString &);
-
-			QStringList scanPaths() const;
+			[[nodiscard]] QStringList scanPaths() const;
 			void clearScanPaths();
 			void addScanPath(const QString &);
-			int scanPathCount() const;
+			[[nodiscard]] int scanPathCount() const;
 
 			void setScanProfile(const ScanProfile &);
 
@@ -61,6 +60,7 @@ namespace Qlam {
 
 		protected:
             void updateScanDuration();
+            [[nodiscard]] QString currentDurationString() const;
 			void dragEnterEvent(QDragEnterEvent *) override;
 			void dropEvent(QDropEvent *) override;
 			void timerEvent(QTimerEvent *) override;
@@ -86,6 +86,7 @@ namespace Qlam {
 			void clearScanOutput();
 			void setScanProgress(int);
 			void addIssue(const QString &path, const QString &virus);
+            void addPathNotFound(const QString &path);
 			void addMatchedHeuristic(const QString &, ScannerHeuristicMatch);
 
 		private Q_SLOTS:
@@ -99,11 +100,9 @@ namespace Qlam {
 
 		private:
 			std::unique_ptr<Ui::ScanWidget> m_ui;
-			Scanner * m_scanner;
+			Scanner m_scanner;
 			int m_scanDuration;
 			int m_scanDurationTimer;
-
-        QString currentDurationString() const;
     };
 }
 

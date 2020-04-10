@@ -37,7 +37,7 @@ add_executable(Qlam
     src/resources/application.qrc
     src/resources/mainwindow.qrc
     src/resources/settingsdialogue.qrc
-)
+        src/timedactiondialogue.cpp src/timedactiondialogue.h)
 
 target_compile_features(Qlam PRIVATE cxx_std_17)
 target_link_libraries(Qlam clamav Qt5::Core Qt5::Widgets Qt5::Network ${CMAKE_THREAD_LIBS_INIT})

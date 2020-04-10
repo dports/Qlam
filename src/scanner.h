@@ -26,8 +26,6 @@ namespace Qlam {
 		public:
 			using IssueList = QList<FileWithIssues>;
 
-            static const int FileCountNotCalculated;
-
 			explicit Scanner( const QString & = QString(), QObject * = nullptr );
 			explicit Scanner( const QStringList &, QObject * = nullptr );
 			~Scanner() override;
@@ -49,37 +47,30 @@ namespace Qlam {
 			void setScanPath( const QString & path ) {
 				m_scanPaths.clear();
 				m_scanPaths.append(path);
-				m_fileCount = FileCountNotCalculated;
+				m_fileCount.reset();
 			}
 
 			void setScanPaths( const QStringList & paths ) {
 				m_scanPaths = paths;
-				m_fileCount = FileCountNotCalculated;
+				m_fileCount.reset();
 			}
 
 			bool isValid() const;
 
-			static Scanner * startScan(const QString & scanPath) {
+			static std::unique_ptr<Scanner> startScan(const QString & scanPath) {
 				return startScan(QStringList() << scanPath);
 			}
 
-			static Scanner * startScan(const QStringList & scanPaths) {
-				auto * ret = new Scanner(scanPaths);
-
-				if(ret->isValid()) {
-					ret->startScan();
-				} else {
-					delete ret;
-					ret = nullptr;
-				}
-
+			static std::unique_ptr<Scanner> startScan(const QStringList & scanPaths) {
+				auto ret = std::make_unique<Scanner>(scanPaths);
+                ret->startScan();
 				return ret;
 			}
 
 			void reset();
-			int fileCount() const;
+			std::optional<int> fileCount() const;
 
-			int infectedFileCount() const {
+			int issueCount() const {
 				return m_issues.count();
 			}
 
@@ -95,7 +86,6 @@ namespace Qlam {
 				return (long long) m_scannedDataSize;
 			}
 
-        // TODO provide more information in fileInfected() signals (e.g. if heuristic rather than actual virus)
 		Q_SIGNALS:
 			/* emitted when a scan starts */
 			void scanStarted();
@@ -103,14 +93,14 @@ namespace Qlam {
 			/* emitted when the async task to count the files to be scanned has completed */
 			void fileCountComplete(int);
 
+			/* emitted when a path to scan cannot be found */
+			void pathNotFound(const QString & path);
+
 			/* emitted when a file is scanned */
 			void fileScanned( const QString & path );
 
 			/* emitted when a file is scanned and is found to be clean */
 			void fileClean( const QString & path );
-
-			/* emitted when a file is scanned and is found to be infected */
-			void fileInfected( const QString & path );
 
 			/* emitted when a file is scanned and is found to be infected */
 			void fileInfected( const QString & path, const QString & infection );
@@ -160,7 +150,7 @@ namespace Qlam {
 			TreeItem m_countedDirs;
 
 			IssueList m_issues;
-			mutable int m_fileCount;
+			mutable std::optional<int> m_fileCount;
 			int m_scannedFileCount;
 			int m_failedScanCount;
 			unsigned long m_scannedDataSize;

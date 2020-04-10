@@ -10,10 +10,8 @@
 #include "databaseinfo.h"
 #include "updater.h"
 
-/* TODO
- * when the database path in the settings is changed this widget needs to
- * update its database information. perhaps a signal from qlamApp?
- */
+// TODO when the database path in the settings is changed this widget needs to update its database information. perhaps
+//  a signal from qlamApp?
 
 using namespace Qlam;
 
