@@ -22,112 +22,108 @@ Updater::Updater(QObject *parent)
   m_abort(false) {
 }
 
-
+// TODO needs refactor
 void Updater::run() {
-	Settings * s = qlamApp->settings();
-	QString dbPath = s->databasePath();
+    Settings *s = qlamApp->settings();
+    QString dbPath = s->databasePath();
 
-	if(dbPath.isEmpty()) {
-		Q_EMIT updateFailed(tr("You are using the system ClamAV virus databases which are updated automatically."));
-		return;
-	}
+    if (dbPath.isEmpty()) {
+        Q_EMIT updateFailed(tr("You are using the system ClamAV virus databases which are updated automatically."));
+        return;
+    }
 
-	QList<DatabaseInfo> dbs(Application::instance()->databases());
-	int currentBytecodeVersion = -1;
+    QList<DatabaseInfo> dbs(Application::instance()->databases());
+    int currentBytecodeVersion = -1;
     int currentDailyVersion = -1;
     int currentMainVersion = -1;
-    QString latestClamAvVersion;
 
-	for(const auto & db: dbs) {
+    for (const auto &db: dbs) {
+        if ("main.cvd" == db.fileName()) {
+            currentMainVersion = db.version().toInt();
+        } else if ("daily.cld" == db.fileName() || "daily.cvd" == db.fileName()) {
+            currentDailyVersion = db.version().toInt();
+        } else if ("bytecode.cvd" == db.fileName()) {
+            currentBytecodeVersion = db.version().toInt();
+        }
+    }
 
-		if("main.cvd" == db.fileName()) {
-			currentMainVersion = db.version().toInt();
-		}
-		else if("daily.cld" == db.fileName() || "daily.cvd" == db.fileName()) {
-			currentDailyVersion = db.version().toInt();
-		}
-		else if("bytecode.cvd" == db.fileName()) {
-			currentBytecodeVersion = db.version().toInt();
-		}
-	}
+    qDebug() << "current";
+    qDebug() << "main version: " << currentMainVersion;
+    qDebug() << "daily version: " << currentDailyVersion;
+    qDebug() << "bytecode version: " << currentBytecodeVersion;
 
-	qDebug() << "current";
-	qDebug() << "main version: " << currentMainVersion;
-	qDebug() << "daily version: " << currentDailyVersion;
-	qDebug() << "bytecode version: " << currentBytecodeVersion;
+    // clamav TXT DNS record with database versions looks like this:
+    // <libclamav version>:<main.cvd version>:<daily.cld version>:<x>:<y>:<z>:<safebrowsing version>:<bytecode.cvd version>
+    QByteArray dnsTxtRecord;
+    QEventLoop loop;
+    connect(this, &Updater::abortRequested, &loop, &QEventLoop::quit);
 
-	/* clamav TXT DNS record with database versions looks like this:
-	 * <libclamav version>:<main.cvd version>:<daily.cld version>:<x>:<y>:<z>:<safebrowsing version>:<bytecode.cvd version>
-	 */
-	QByteArray dnsTxtRecord;
-	QEventLoop loop;
-	connect(this, &Updater::abortRequested, &loop, &QEventLoop::quit);
+    {
+        /* block for max 5s while the lookup is in progress. */
+        QDnsLookup lookup(QDnsLookup::TXT, "current.cvd.clamav.net");
+        QTimer t;
+        t.setSingleShot(true);
+        t.setInterval(5000);
+        connect(&t, &QTimer::timeout, &loop, &QEventLoop::quit);
+        connect(&lookup, &QDnsLookup::finished, &loop, &QEventLoop::quit);
+        lookup.lookup();
+        t.start();
+        loop.exec();
 
-	{
-		/* block for max 5s while the lookup is in progress. */
-		QDnsLookup lookup(QDnsLookup::TXT, "current.cvd.clamav.net");
-		QTimer t;
-		t.setSingleShot(true);
-		t.setInterval(5000);
-		connect(&t, &QTimer::timeout, &loop, &QEventLoop::quit);
-		connect(&lookup, &QDnsLookup::finished, &loop, &QEventLoop::quit);
-		lookup.lookup();
-		t.start();
-		loop.exec();
+        if (m_abort) {
+            Q_EMIT aborted();
+            return;
+        }
 
-		if(m_abort) {
-			Q_EMIT aborted();
-			return;
-		}
+        if (!lookup.isFinished()) {
+            qDebug() << "DNS request timed out";
+            Q_EMIT checkFailed(tr("Failed to fetch latest version numbers for databases."));
+            return;
+        }
 
-		if(!lookup.isFinished()) {
-			qDebug() << "DNS request timed out";
-			Q_EMIT checkFailed(tr("Failed to fetch latest version numbers for databases."));
-			return;
-		}
+        QList<QDnsTextRecord> records(lookup.textRecords());
 
-		QList<QDnsTextRecord> records(lookup.textRecords());
+        if (1 > records.count()) {
+            qDebug() << "DNS request returned no records";
+            Q_EMIT checkFailed(tr("Failed to fetch latest version numbers for databases."));
+            return;
+        } else if (1 < records.count()) {
+            qDebug() << "DNS request returned too many records";
+            Q_EMIT checkFailed(tr("Failed to fetch latest version numbers for databases."));
+            return;
+        }
 
-		if(1 > records.count()) {
-			qDebug() << "DNS request returned no records";
-			Q_EMIT checkFailed(tr("Failed to fetch latest version numbers for databases."));
-			return;
-		}
-		else if(1 < records.count()) {
-			qDebug() << "DNS request returned too many records";
-			Q_EMIT checkFailed(tr("Failed to fetch latest version numbers for databases."));
-			return;
-		}
+        QList<QByteArray> values(records.at(0).values());
 
-		QList<QByteArray> values(records.at(0).values());
+        if (1 > values.count()) {
+            qDebug() << "DNS request returned no values";
+            Q_EMIT checkFailed(tr("Failed to fetch latest version numbers for databases."));
+            return;
+        } else if (1 < values.count()) {
+            qDebug() << "DNS request returned too many values";
+            Q_EMIT checkFailed(tr("Failed to fetch latest version numbers for databases."));
+            return;
+        }
 
-		if(1 > values.count()) {
-			qDebug() << "DNS request returned no values";
-			Q_EMIT checkFailed(tr("Failed to fetch latest version numbers for databases."));
-			return;
-		}
-		else if(1 < values.count()) {
-			qDebug() << "DNS request returned too many values";
-			Q_EMIT checkFailed(tr("Failed to fetch latest version numbers for databases."));
-			return;
-		}
+        dnsTxtRecord = values.at(0);
+    }
 
-		dnsTxtRecord = values.at(0);
-	}
+    qDebug() << "DNS TXT record:" << dnsTxtRecord;
 
-	qDebug() << "DNS TXT record:" << dnsTxtRecord;
+    QList<QByteArray> numbers = dnsTxtRecord.split(':');
+    QList<QByteArray> libVersion = numbers.at(0).split('.');
 
-	QList<QByteArray> numbers = dnsTxtRecord.split(':');
-	bool ok;
+    if (3 != libVersion.length()
+        || !std::all_of(libVersion.cbegin(), libVersion.cend(), [](const QByteArray & number) {
+            bool ok;
+            (void) number.toInt(&ok);
+            return ok;
+        })) {
+        Q_EMIT checkFailed("Invalid version number for ClamAV software.");
+        return;
+    }
 
-	/* TODO parse clamav version into major.minor.release */
-	latestClamAvVersion = numbers.at(0);
-
-	if(latestClamAvVersion.isEmpty()) {
-		Q_EMIT checkFailed("Invalid version number for ClamAV software.");
-		return;
-	}
-
+    bool ok;
 	int latestMainVersion = numbers.at(1).toInt(&ok);
 
 	if(!ok) {
@@ -282,7 +278,6 @@ qDebug() << "update URL:" << u;
 	Q_EMIT updateSucceeded();
 	Q_EMIT updateComplete();
 }
-
 
 void Updater::emitUpdateProgress( qint64 received, qint64 total) {
 	Q_EMIT updateProgress(int(100.0 * received / total));

@@ -414,8 +414,12 @@ void ScanWidget::slotScanSucceeded() {
             }
         };
 
-        auto * dlg = new TimedActionDialogue(tr("Qlam will exit in %1s."), action, this);
+        auto * dlg = new TimedActionDialogue(tr("The scan was clean. Qlam will exit in %1s."), action, this);
         connect(dlg, &QDialog::finished, dlg, &QDialog::deleteLater);
+        dlg->setWindowTitle(tr("Scan Clean"));
+        dlg->setTimeout(10000);
+        dlg->enableNow();
+        dlg->setNowLabel(tr("Quit now"));
         dlg->show();
         dlg->start();
     }

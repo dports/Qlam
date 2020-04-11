@@ -42,6 +42,29 @@ namespace Qlam {
                 return m_remaining;
             }
 
+            void enableCancel(bool enable = true);
+            void enableNow(bool enable = true);
+
+            inline void disableCancel() {
+                enableCancel(false);
+            }
+
+            inline void disableNow() {
+                enableNow(false);
+            }
+
+            [[nodiscard]] inline QString cancelLabel() const {
+                return m_cancelLabel;
+            }
+
+            [[nodiscard]] QString nowLabel() const {
+                return m_nowLabel;
+            }
+
+            void setCancelLabel(const QString &);
+
+            void setNowLabel(const QString &);
+
         public Q_SLOTS:
             bool start(std::optional<int> timeout = {});
             bool pause();
@@ -49,11 +72,17 @@ namespace Qlam {
             virtual void cancel();
 
         protected:
-            virtual void triggerAction();
+            void refreshButtonLabels();
+            void refreshCancelLabel();
+            void refreshNowLabel();
             void refreshMessage();
 
+            virtual void triggerAction();
+
         private:
+            void reset();
             void slotTimerTick();
+            void performActionNow();
 
             std::unique_ptr<Ui::TimedActionDialogue> m_ui;
             int m_timeout;
@@ -61,6 +90,9 @@ namespace Qlam {
             QString m_messageTemplate;
             Action m_action;
             QTimer m_timer;
+            QString m_cancelLabel;
+            QString m_nowLabel;
+
     };
 
 }
