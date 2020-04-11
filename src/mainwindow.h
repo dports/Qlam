@@ -39,6 +39,7 @@ namespace Qlam {
 			 * widget before switching */
 //			void slotSyncStackWithList();
 			void slotScanProfileAdded(int);
+
 			void slotScanProfileChosen(int);
 			void slotSaveProfileButtonClicked();
 			void slotScanPathsChanged();
@@ -48,18 +49,17 @@ namespace Qlam {
 			void slotEnableBackButton();
 
 		private:
-			void addBuiltInWidgets();
-			void readSettings();
-			void writeSettings() const;
+			void readWindowSettings();
+			void writeWindowSettings() const;
 
 			std::unique_ptr<Ui::MainWindow> m_ui;
-			QStackedWidget * m_scanStack;
-			QToolButton * m_scanBackButton;
-			ScanWidget * m_scanWidget;
-			ScanProfileChooser * m_scanProfileChooser;
-			UpdateWidget * m_updateWidget;
-			QWidget * m_reportsWidget;
-			SettingsDialogue * m_settingsDialogue;
+//			QStackedWidget * m_scanStack;
+//			QToolButton * m_scanBackButton;
+//			ScanWidget * m_scanWidget;
+//			ScanProfileChooser * m_scanProfileChooser;
+//			UpdateWidget * m_updateWidget;
+//			QWidget * m_reportsWidget;
+//			SettingsDialogue * m_settingsDialogue;
 	};
 }
 
