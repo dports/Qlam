@@ -1,0 +1,20 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=KonqPopupMenu/Plugin
+MimeType=inode/directory;application/octet-stream;
+Actions=scan;
+Icon=qlam
+# comment out if the service should appear in the "Actions" menu rather than
+# at the top level
+X-KDE-Priority=TopLevel
+# comment out if no submenu is necessary
+#X-KDE-Submenu=MyMenu
+TryExec=/usr/bin/qlam
+
+[Desktop Action scan]
+Name=Scan for viruses
+Name[en_GB]=Scan for viruses
+Comment=Scan this file or directory using Qlam.
+Comment[en_GB]=Scan this file or directory using Qlam.
+Icon=qlam
+Exec=/usr/bin/qlam --paths %U

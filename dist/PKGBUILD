@@ -1,0 +1,52 @@
+# Maintainer: Darren Edale <darren@equituk.net>
+pkgname=qlam-git
+pkgver=r13.c50f5ca
+pkgrel=1
+pkgdesc="A virus scanner using the Clam AV engine."
+arch=('any')
+url="https://github.com/darrenedale/Qlam"
+license=('unknown')
+groups=()
+depends=()
+makedepends=('git' 'cmake' 'clamav' 'qt5-base')
+provides=("${pkgname%-VCS}")
+conflicts=("${pkgname%-VCS}")
+replaces=()
+backup=()
+options=()
+install=
+source=('git+https://github.com/darrenedale/Qlam.git')
+noextract=()
+md5sums=('SKIP')
+
+pkgver() {
+# 	cd "$srcdir/${pkgname%-VCS}"
+	cd "$srcdir/Qlam"
+	printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+# prepare() {
+# 	cd "$srcdir/${pkgname%-VCS}"
+# 	patch -p1 -i "$srcdir/${pkgname%-VCS}.patch"
+# }
+
+build() {
+# 	cd "$srcdir/${pkgname%-VCS}"
+	cd "$srcdir/Qlam"
+	rm -rf build
+	mkdir build && cd build
+	cmake ../ -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_BUILD_TYPE=Release ../
+	# TODO work out the best value for -j
+	cmake --build ./ --target qlam --config Release -- -j 4
+}
+
+#check() {
+#	cd "$srcdir/${pkgname%-VCS}"
+#	make -k check
+#}
+
+package() {
+# 	cd "$srcdir/${pkgname%-VCS}"
+	cd "$srcdir/Qlam/build"
+	DESTDIR="$pkgdir/" cmake --install ./
+}

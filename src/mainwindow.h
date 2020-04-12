@@ -28,11 +28,13 @@ namespace Qlam {
 		public Q_SLOTS:
 //            void startScan();
 
-			bool startScanByProfileName(const QString & profile);
+			bool startScanByProfileName(const QString & profileName);
 			bool startCustomScan(const QStringList & paths);
 
 		protected:
 	        void closeEvent(QCloseEvent *)  override;
+            void dragEnterEvent(QDragEnterEvent *) override;
+            void dropEvent(QDropEvent *) override;
 
 		private Q_SLOTS:
 			/* might need this if we want to prompt to save changes in current

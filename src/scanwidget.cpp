@@ -78,6 +78,8 @@ ScanWidget::ScanWidget(QWidget *parent)
 	connect(&m_scanner, &Scanner::fileScanFailed, this, &ScanWidget::addFailedFileScan, Qt::BlockingQueuedConnection);
 }
 
+ScanWidget::~ScanWidget() = default;
+
 QStringList ScanWidget::scanPaths() const {
 	QStringList paths;
 
@@ -481,5 +483,3 @@ QString ScanWidget::currentDurationString() const {
     }
     return durationText;
 }
-
-ScanWidget::~ScanWidget() = default;

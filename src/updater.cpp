@@ -24,7 +24,7 @@ Updater::Updater(QObject *parent)
 
 // TODO needs refactor
 void Updater::run() {
-    Settings *s = qlamApp->settings();
+    Settings * s = qlamApp->settings();
     QString dbPath = s->databasePath();
 
     if (dbPath.isEmpty()) {

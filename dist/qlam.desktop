@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Qlam
+Comment=Scan your files using clamav
+GenericName=Virus scanner
+Exec=qlam
+Terminal=false
+Type=Application
+Icon=qlam
+Categories=Application;Qt;Utility;FileTools;
+MimeType=
+StartupNotify=true
