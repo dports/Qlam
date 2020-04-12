@@ -13,7 +13,7 @@ find_package(Qt5 COMPONENTS Core Widgets Network REQUIRED)
 find_package(Threads REQUIRED)
 
 # add the executable
-add_executable(Qlam
+add_executable(qlam
     src/main.cpp
     src/infectedfile.cpp
     src/mainwindow.cpp
@@ -39,5 +39,46 @@ add_executable(Qlam
     src/resources/settingsdialogue.qrc
         src/timedactiondialogue.cpp src/timedactiondialogue.h)
 
-target_compile_features(Qlam PRIVATE cxx_std_17)
-target_link_libraries(Qlam clamav Qt5::Core Qt5::Widgets Qt5::Network ${CMAKE_THREAD_LIBS_INIT})
+target_compile_features(qlam PRIVATE cxx_std_17)
+target_link_libraries(qlam clamav Qt5::Core Qt5::Widgets Qt5::Network ${CMAKE_THREAD_LIBS_INIT})
+set_target_properties(qlam PROPERTIES PROJECT_LABEL QLam)
+
+install(TARGETS qlam
+        CONFIGURATIONS Release
+        RUNTIME
+        PERMISSIONS
+        OWNER_READ OWNER_WRITE OWNER_EXECUTE
+        GROUP_READ GROUP_EXECUTE
+        WORLD_READ WORLD_EXECUTE
+        )
+
+install(TARGETS qlam
+        CONFIGURATIONS Debug
+        RENAME qlam.dbg
+        RUNTIME
+        PERMISSIONS
+        OWNER_READ OWNER_WRITE OWNER_EXECUTE
+        GROUP_READ GROUP_EXECUTE
+        WORLD_READ WORLD_EXECUTE
+        )
+
+install(DIRECTORY dist/icons
+        DESTINATION share
+        FILES_MATCHING PATTERN "qlam.png"
+        )
+
+install(DIRECTORY dist/man
+        DESTINATION share
+        )
+
+install(DIRECTORY dist/doc
+        DESTINATION share
+        )
+
+install(FILES dist/qlam.desktop
+        DESTINATION share/applications/
+        )
+
+install(FILES dist/qlamscan.desktop
+        DESTINATION share/kservices5/
+        )
