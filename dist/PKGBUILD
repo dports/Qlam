@@ -1,6 +1,6 @@
 # Maintainer: Darren Edale <darren@equituk.net>
 pkgname=qlam-git
-pkgver=r13.c50f5ca
+pkgver=r14.10738d3
 pkgrel=1
 pkgdesc="A virus scanner using the Clam AV engine."
 arch=('any')
@@ -47,6 +47,6 @@ build() {
 
 package() {
 # 	cd "$srcdir/${pkgname%-VCS}"
-	cd "$srcdir/Qlam/build"
-	DESTDIR="$pkgdir/" cmake --install ./
+	cd "$srcdir/Qlam"
+	DESTDIR="$pkgdir/" cmake --install ./build
 }
