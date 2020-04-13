@@ -1,27 +1,26 @@
 # Maintainer: Darren Edale <darren@equituk.net>
 pkgname=qlam-git
-pkgver=r14.10738d3
+pkgver=r15.d9beca9
 pkgrel=1
 pkgdesc="A virus scanner using the Clam AV engine."
 arch=('any')
 url="https://github.com/darrenedale/Qlam"
 license=('unknown')
 groups=()
-depends=()
-makedepends=('git' 'cmake' 'clamav' 'qt5-base')
+depends=('clamav' 'qt5-base')
+makedepends=('git' 'cmake')
 provides=("${pkgname%-VCS}")
 conflicts=("${pkgname%-VCS}")
 replaces=()
 backup=()
 options=()
 install=
-source=('git+https://github.com/darrenedale/Qlam.git')
+source=("${pkgname%-VCS}::git+https://github.com/darrenedale/Qlam.git")
 noextract=()
 md5sums=('SKIP')
 
 pkgver() {
-# 	cd "$srcdir/${pkgname%-VCS}"
-	cd "$srcdir/Qlam"
+ 	cd "$srcdir/${pkgname%-VCS}"
 	printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
 }
 
@@ -31,13 +30,19 @@ pkgver() {
 # }
 
 build() {
-# 	cd "$srcdir/${pkgname%-VCS}"
-	cd "$srcdir/Qlam"
+ 	cd "$srcdir/${pkgname%-VCS}"
 	rm -rf build
 	mkdir build && cd build
 	cmake ../ -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_BUILD_TYPE=Release ../
-	# TODO work out the best value for -j
-	cmake --build ./ --target qlam --config Release -- -j 4
+
+	# base the arg to -j on the number of CPUs in the build machine
+	THREAD_COUNT=$(nproc)
+
+	if ! [[ "${THREAD_COUNT}" =~ ^[1-9][0-9]*$ ]]; then
+	    THREAD_COUNT=1
+    fi
+
+	cmake --build ./ --target qlam --config Release -- -j ${THREAD_COUNT}
 }
 
 #check() {
@@ -46,7 +51,6 @@ build() {
 #}
 
 package() {
-# 	cd "$srcdir/${pkgname%-VCS}"
-	cd "$srcdir/Qlam"
+ 	cd "$srcdir/${pkgname%-VCS}"
 	DESTDIR="$pkgdir/" cmake --install ./build
 }

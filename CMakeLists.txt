@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # set the project name
-project(Qlam LANGUAGES CXX VERSION 1.0)
+project(Qlam LANGUAGES CXX VERSION 0.5)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -9,7 +9,7 @@ set(CMAKE_AUTOUIC ON)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-find_package(Qt5 COMPONENTS Core Widgets Network REQUIRED)
+find_package(Qt5 REQUIRED COMPONENTS Core Widgets Network)
 find_package(Threads REQUIRED)
 
 # add the executable
@@ -42,7 +42,7 @@ add_executable(qlam
 
 target_compile_features(qlam PRIVATE cxx_std_17)
 target_link_libraries(qlam clamav Qt5::Core Qt5::Widgets Qt5::Network ${CMAKE_THREAD_LIBS_INIT})
-set_target_properties(qlam PROPERTIES PROJECT_LABEL QLam)
+set_target_properties(qlam PROPERTIES PROJECT_LABEL Qlam)
 
 install(TARGETS qlam
         CONFIGURATIONS Release
